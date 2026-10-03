@@ -12,8 +12,14 @@ export function record(event) {
   mkdirSync('runs', { recursive: true });
   appendFileSync('runs/transactions.jsonl', json({ at: new Date().toISOString(), ...event }) + '\n', { mode: 0o600 });
 }
-export function auditedAccount(account, log = record) {
+export function auditedAccount(account, log = record, gasPercent = 100) {
+  if (!Number.isInteger(gasPercent) || gasPercent < 100 || gasPercent > 150) throw new Error('Gas buffer must be an integer between 100 and 150 percent');
   return { ...account, async signTransaction(request, ...rest) {
+    if (gasPercent !== 100) {
+      const gas = BigInt(request.gas ?? 0);
+      if (gas <= 0n) throw new Error('A positive gas estimate is required before padding');
+      request = { ...request, gas: (gas * BigInt(gasPercent) + 99n) / 100n };
+    }
     const serialized = await account.signTransaction(request, ...rest);
     // Persist the public hash before the SDK broadcasts. Never log signing
     // material or the serialized transaction, including on later SDK failure.
@@ -35,7 +41,7 @@ export async function client(signer = false) {
       key = await keytar.getPassword('genlayer-cli', 'account:' + config.activeAccount);
     }
     if (!key) throw new Error('Unlock the GenLayer CLI account; no signing key is available.');
-    account = auditedAccount(createAccount(key));
+    account = auditedAccount(createAccount(key), record, Number(process.env.GENLAYER_GAS_BUFFER_PERCENT || 100));
   }
   return createClient({ chain: testnetBradbury, account, endpoint: process.env.GENLAYER_RPC_URL || undefined });
 }

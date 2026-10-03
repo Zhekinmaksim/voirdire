@@ -77,9 +77,12 @@ URLs cannot receive a key. Collection and on-chain attestation are separate so
 paid responses can be saved first.
 
 Sponsorship is bounded by an absolute signer nonce ceiling and a maximum fee per
-transaction. The service stops when its allowance is exhausted. See
-[`lib/COLLECTOR_OPERATIONS.md`](lib/COLLECTOR_OPERATIONS.md) for renewal and the
-remaining cross-instance replay limitation of this testnet service.
+transaction. A private journal persists signed transactions before broadcast and
+deduplicates requests across server instances and restarts. It uses Vercel OIDC
+and the nonsecret production `BLOB_STORE_ID`; no provider key or private signing
+key is stored in the journal. The service stops when its allowance or journal
+capacity is exhausted. See [`lib/COLLECTOR_OPERATIONS.md`](lib/COLLECTOR_OPERATIONS.md)
+for recovery and renewal.
 
 Custom domain `voirdire.pro` is managed by the project owner.
 

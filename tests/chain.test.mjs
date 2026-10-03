@@ -45,3 +45,11 @@ test('signing preserves a public recovery hash before broadcast without logging 
   assert.equal(logs[0].nonce,7);assert.equal(logs[0].gas,42n);
   assert.ok(!Object.values(logs[0]).includes(raw));assert.ok(!Object.values(logs[0]).includes('private-input'));
 });
+test('explicit bounded gas cushion is logged exactly and rejects missing estimates before signing',async()=>{
+  let signed;const logs=[];
+  const base={signTransaction:async r=>{signed=r;return '0x0102'}};
+  const account=auditedAccount(base,e=>logs.push(e),125);
+  await account.signTransaction({gas:101n});assert.equal(signed.gas,127n);assert.equal(logs[0].gas,127n);
+  signed=null;await assert.rejects(account.signTransaction({}),/positive gas estimate/);assert.equal(signed,null);
+  assert.throws(()=>auditedAccount(base,()=>{},151));
+});

@@ -5,11 +5,17 @@ Requests require the challenger's signature over the finalized commitment and a
 server HMAC over the collected envelope. An attestation checks both finalized
 and provisional chain state before submitting.
 
-These checks protect evidence but do **not** provide distributed idempotency:
-two server instances can submit the same proof before either transaction appears
-in provisional Intelligent Contract state. Rejected duplicate calls can still
-consume the sponsoring account's gas. Per-instance caching and sequential nonce
-assignment reduce this race; they do not eliminate it.
+Production uses one private Blob journal per chain and collector address, shared
+by all contract deployments. Conditional writes fence concurrent reservations.
+Signed bytes and their public hash must be durably recorded before the SDK can
+broadcast. Recovery only rebroadcasts those same bytes while the outcome is
+unknown. A mined EVM receipt releases the signer but preserves the commitment,
+evidence digest and IC transaction mapping permanently.
+
+Storage uses Vercel OIDC and production `BLOB_STORE_ID`. Reads bypass the CDN;
+writes compare ETags. Ambiguous writes stop submission. The journal is capped
+at 64 KiB, with three CAS attempts and 24 storage operations per request. The
+pinned SDK's internal retries are disabled. No model or signing keys are stored.
 
 The signing boundary therefore requires both production environment variables:
 
@@ -34,9 +40,16 @@ When exhausted, inspect receipts and account nonce, identify duplicate/error
 traffic, then deliberately set a new small allowance and redeploy. Do not refill
 the wallet or raise the ceiling as an automatic response to an API error.
 
-For unattended public production, use a durable global queue/idempotency record
-and monitoring. The current implementation is a bounded sponsored testnet
-service, with request failures possible during cross-instance nonce races.
+The signer must be exclusive to this journal. Do not send manual transactions,
+run a legacy CLI attestor, or roll back to pre-journal code with the same key.
+Historical deployment URLs are protected by Vercel SSO; administrative SSO or
+bypass access must obey the same rule. Collection without signing may run locally.
+
+An unsigned reservation expires after 60 seconds and can be fenced off by a new
+owner. A signed transaction never expires. Missing receipts permit only exact-byte
+rebroadcast. A confirmed EVM revert permits a new attempt under the same spending
+limits. Successful EVM receipts without a recognized consensus event remain
+blocked for operator inspection. IC execution failures are not auto-resubmitted.
 
 Provider keys arrive only in `/api/collect`, are sent to the fixed OpenRouter
 HTTPS destination without redirects, and are not retained or logged. Evidence
@@ -78,16 +91,14 @@ estimation, signs once, records the EVM receipt, and then reads the Intelligent
 Contract receipt. Estimation failure aborts without signing; a mined revert is
 reported without automatic retry. An ACCEPTED receipt is provisional, not final.
 
-Verification of the current implementation: 121 contract state-machine checks
-also pass against the exact-source deployment wrapper. JavaScript tests cover
-15 collector cases plus finalization safety and browser protocol cases. These are automated logic tests; successful deployment and
+Verification: 143 contract state-machine checks also pass against the exact-source
+deployment wrapper. JavaScript tests cover collector boundaries, durable journal
+races, finalization and browser protocol. Successful deployment and
 live consensus adjudication require separate network receipts.
 
 The signer records only the public EVM transaction hash and nonce before
 broadcast. If SDK submission or receipt decoding fails after signing, the API
 returns that hash and a reverted/unknown outcome. Inspect the EVM receipt before
-retrying. Same-instance signed failures are cached. A later request can retry a known
-reverted submission only after RPC confirms status `0x0` for that exact EVM
-hash. Missing receipts, successful EVM receipts, and unknown outcomes cannot
-authorize a resubmission. Restarts still require operator or client receipt
-recovery before repeating the request.
+retrying. A new nonce is permitted only after RPC confirms status `0x0` for the
+exact saved EVM hash. Missing receipts, successful EVM receipts and unknown
+outcomes do not authorize a new nonce. Recovery survives server restarts.

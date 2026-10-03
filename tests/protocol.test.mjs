@@ -109,6 +109,13 @@ test('wallet wrapper works with immutable injected provider methods',async()=>{
  const wrapped=trackWalletProvider(provider,value=>seen.push(value));
  assert.equal(await wrapped.request({method:'eth_sendTransaction'}),hash);assert.deepEqual(seen,[hash]);
 });
+test('wallet receives the gas cushion for approval without mutating SDK request or call data',async()=>{
+ let sent;const wallet={request:async r=>{sent=r;return '0x'+'e'.repeat(64)}};
+ const original=Object.freeze({method:'eth_sendTransaction',params:Object.freeze([Object.freeze({gas:'0x65',value:'0x7',data:'0xabcdef'})])});
+ await trackWalletProvider(wallet,()=>{}).request(original);
+ assert.equal(sent.params[0].gas,'0x7f');assert.equal(original.params[0].gas,'0x65');
+ assert.equal(sent.params[0].value,'0x7');assert.equal(sent.params[0].data,'0xabcdef');
+});
 
 import {corpusRoundCapacity} from '../app/src/protocol.js';
 test('registration round capacity uses two fresh probes per required class and fails closed',()=>{

@@ -8,6 +8,7 @@ import attest from '../api/attest.mjs';
 
 const config = JSON.parse(readFileSync('public/deployment.json'));
 const statePath = process.env.SMOKE_STATE_FILE || 'runs/smoke.json';
+const smokeLimitUsd = 0.99; // $0.01 of the original $1 reserve covers bounded storage verification.
 const state = existsSync(statePath) ? JSON.parse(readFileSync(statePath)) : { contractAddress: config.contractAddress, costs: [], transactions: [] };
 if(state.contractAddress!==config.contractAddress)throw new Error('Smoke state belongs to a different contract; select its matching state file');
 const save = () => writeFileSync(statePath, json(state)+'\n', {mode:0o600});
@@ -20,6 +21,7 @@ const read = (functionName,args=[]) => c.readContract({address:config.contractAd
 async function write(functionName,args=[],value=0n){
   const hash=await submit(c,{address:config.contractAddress,functionName,args,value});
   state.transactions.push({functionName,hash});save();
+  return hash;
 }
 async function invoke(handler,body){
   let result,status;
@@ -48,7 +50,7 @@ try {
     if(process.argv.includes('--remote')){
       if(state.envelope.endpoint!=='openrouter:openai/gpt-4o-mini')throw new Error('Unexpected billable model');
       const reserve=state.envelope.transcripts.length*0.05;
-      if(totalDebit()+reserve>1)throw new Error('Global USD1 smoke budget exhausted');
+      if(totalDebit()+reserve>smokeLimitUsd)throw new Error('Global USD0.99 smoke budget exhausted');
       const index=state.costs.length;state.costs.push({debit:reserve,status:'reserved-hosted'});save();
       const response=await fetch('https://voirdire-mu.vercel.app/api/collect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({commitId:state.commitId,envelope:state.envelope,signature,apiKey:envValue('.env','OPENROUTER_API_KEY'),priceLimits:{prompt:0.15,completion:0.6}})});
       const result=await response.json();if(!response.ok)throw new Error(result.error||'Hosted collection failed');
@@ -59,7 +61,7 @@ try {
     }
     const handler=collectHandler({fetch:async(url,options)=>{
       const used=totalDebit();
-      if(used+0.05>1)throw new Error('USD1 smoke budget exhausted');
+      if(used+0.05>smokeLimitUsd)throw new Error('USD0.99 smoke budget exhausted');
       const body=JSON.parse(options.body);
       if(body.model!=='openai/gpt-4o-mini'||body.max_tokens>600)throw new Error('Unexpected billable model');
       body.provider={...body.provider,max_price:{prompt:0.15,completion:0.6}};
@@ -105,11 +107,26 @@ try {
   }else if(command==='withdraw'){
     const balance=BigInt(await read('balance_of',[c.account.address]));
     if(!balance)throw new Error('No finalized withdrawal credit');
-    await write('withdraw');
+    state.withdrawal={amount:balance.toString(),recipient:c.account.address};save();
+    state.withdrawal.transactionHash=await write('withdraw');save();
+    const block=await c.request({method:'eth_getBlockByNumber',params:['latest',false]});
+    state.withdrawal.afterSubmissionBlock=block.number;
+    state.withdrawal.afterSubmissionBalance=await c.request({method:'eth_getBalance',params:[c.account.address,block.number]});save();
+  }else if(command==='verify-withdrawal'){
+    if(!state.withdrawal?.transactionHash||!state.withdrawal.afterSubmissionBalance)throw new Error('No saved withdrawal baseline');
+    const receipt=await c.getTransaction({hash:state.withdrawal.transactionHash});
+    const block=await c.request({method:'eth_getBlockByNumber',params:['latest',false]});
+    const balance=await c.request({method:'eth_getBalance',params:[state.withdrawal.recipient,block.number]});
+    const delta=BigInt(balance)-BigInt(state.withdrawal.afterSubmissionBalance);
+    const result={status:receipt.statusName,execution:receipt.txExecutionResultName,block:block.number,
+      expectedWei:state.withdrawal.amount,observedBalanceDeltaWei:delta.toString(),
+      exactBalanceIncrease:delta===BigInt(state.withdrawal.amount),messages:receipt.messages};
+    state.withdrawal.verification=result;save();console.log(json(result));
+    if(receipt.statusName!=='FINALIZED'||receipt.txExecutionResultName!=='FINISHED_WITH_RETURN'||!result.exactBalanceIncrease)process.exitCode=2;
   }else if(command==='close'){
     await write('close_claim',[state.claimId]);
   }else if(command==='status'){
     const roundCount=Number(await read('round_count'));
     console.log(json({claim:state.claimId===undefined?null:await read('get_claim',[state.claimId]),commitment:state.commitId===undefined?null:await read('get_commitment',[state.commitId]),round:state.roundId===undefined||state.roundId>=roundCount?null:await read('get_round',[state.roundId]),credit:await read('balance_of',[c.account.address]),solvency:await read('solvency')}));
-  }else throw new Error('Use register|commit|collect|attest|publish|judge|reveal|confirm|withdraw|close|status');
+  }else throw new Error('Use register|commit|collect|attest|publish|judge|reveal|confirm|withdraw|verify-withdrawal|close|status');
 }catch(e){console.error(e.shortMessage||e.message);process.exitCode=1;}

@@ -1,9 +1,11 @@
 import { setup, validate, response, bodyOf, PublicError, safeError } from '../lib/collector.mjs';
 import { digest, proofFor, validProof } from '../lib/evidence.mjs';
+import { submitDurably } from '../lib/durable-attestation.mjs';
 export const config = { maxDuration: 60 };
 export function createHandler(deps = {}) {
   const getContext = deps.setup || setup;
   const check = deps.validate || validate;
+  const durable = deps.durable || (!deps.setup ? submitDurably : null);
   // Best-effort per-instance idempotency, not a durable distributed queue.
   // Serial submission lets SDK getCurrentNonce(default: pending) observe the
   // prior submitted transaction before assigning the next signer nonce.
@@ -34,6 +36,14 @@ export function createHandler(deps = {}) {
         if (commitment.evidence_digest !== evidenceDigest) throw new PublicError('Different evidence already attested');
         submissions.delete(jobKey);
         return response(res, 200, { alreadyAttested: true, evidenceDigest });
+      }
+      if (durable) {
+        try { return response(res, 200, await durable(context, body, evidenceDigest)); }
+        catch (error) {
+          const diagnostic = failure(error, context);
+          if (diagnostic) return response(res, 502, diagnostic);
+          throw error;
+        }
       }
       for (const [key, job] of submissions) if (job.expiresAt < Date.now() / 1000) submissions.delete(key);
       let existing = submissions.get(jobKey);
