@@ -82,7 +82,7 @@ try {
       (state.attestationAttempts??=[]).push({at:new Date().toISOString(),status:response.status,result});save();
       if(!response.ok)throw new Error((result.error||'Hosted collector failed')+(result.evmTransactionHash?' EVM: '+result.evmTransactionHash:''));
     }else result=await invoke(attest,body);
-    state.transactions.push({functionName:'attest_evidence',hash:result.transactionHash});save();console.log(json(result));
+    if(result.transactionHash&&!state.transactions.some(t=>t.hash===result.transactionHash))state.transactions.push({functionName:'attest_evidence',hash:result.transactionHash});save();console.log(json(result));
   }else if(command==='reveal'){
     if(state.transactions.some(t=>t.functionName==='reveal'))throw new Error('Reveal already submitted');
     const cm=await read('get_commitment',[state.commitId]);

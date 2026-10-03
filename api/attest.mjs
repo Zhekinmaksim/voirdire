@@ -34,6 +34,10 @@ export function createHandler(deps = {}) {
       const jobKey = `${address.toLowerCase()}:${body.commitId}`;
       if (commitment.evidence_digest) {
         if (commitment.evidence_digest !== evidenceDigest) throw new PublicError('Different evidence already attested');
+        if (durable) {
+          try { return response(res,200,await durable(context,body,evidenceDigest,{knownAttested:true})); }
+          catch(error){const diagnostic=failure(error,context);if(diagnostic)return response(res,502,diagnostic);throw error;}
+        }
         submissions.delete(jobKey);
         return response(res, 200, { alreadyAttested: true, evidenceDigest });
       }
