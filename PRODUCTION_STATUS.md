@@ -15,7 +15,8 @@ identity oracle or a real-money deployment.
 Real OpenRouter responses were collected by the local collector handler, then
 attested by the deployed Vercel collector. On-chain registration, commitment,
 attestation, evidence publication and an inconclusive judgement succeeded.
-The contract returned the challenge stake as withdrawal credit. This control
+The contract returned the challenge stake as withdrawal credit, and its withdrawal
+reached the challenger's wallet. This control
 used an unclassified declaration; it is not evidence of classification accuracy.
 
 | Step, claim 1 / round 1 | Intelligent Contract transaction |
@@ -27,11 +28,12 @@ used an unclassified declaration; it is not evidence of classification accuracy.
 | Judgement | `0x93bc244214eb7d09f75cde9882fa755c702fd6f07aec45579c16813019941eb7` |
 | Withdrawal | `0xaa323ca294b921e130b2e84f6fc9871e5c9fcda81ff16b5f0f84013b97972e4f` |
 
-At 13:24 UTC, withdrawal was ACCEPTED / FINISHED_WITH_RETURN and emitted a
-transfer of `1000000000000 wei` to the challenger, with execution on finalization.
-The wallet balance had not yet increased. The consensus deadline is 13:48:05 UTC;
-this document will only mark payout verified after finalization and an exact
-balance increase. A successful execution receipt alone is not a completed payout.
+At 13:48 UTC, withdrawal was **FINALIZED / FINISHED_WITH_RETURN**. The observed
+wallet balance increase was exactly **`1000000000000 wei`**, matching the emitted
+transfer and saved withdrawal credit. The comparison used the balance after
+submission fees at block `0x1655060` and the final balance at `0x16555c5`; no
+intervening writes were sent from the recipient wallet. The verification command
+exited 0. Native payout is therefore verified, not merely accepted for execution.
 
 The durable collector journal recovered the existing attestation after an
 interrupted response, returning the same transaction without consuming another
@@ -58,10 +60,11 @@ storage size, sponsored nonce range and transaction fees are bounded. See the
    through the CLI. Browser checks covered the deployed interface and reads.
    Testing a real provider key through hosted `/api/collect` remains pending
    separate authorization for that key transit.
-4. **Final native payout verification is pending** the deadline above.
 
-The dedicated collector key is configured in production with the owner's
-authorization. The primary wallet key remains local. No shared OpenRouter key is
+The dedicated collector key is configured as a Sensitive variable, for production
+only, with the owner's authorization. Its type and scope were checked through
+Vercel's environment metadata without exposing its value. The primary wallet key
+remains local. No shared OpenRouter key is
 deployed. Custom domain `voirdire.pro` is managed by the owner.
 
 Conservative model-call debit, including discarded runs and fully reserved
