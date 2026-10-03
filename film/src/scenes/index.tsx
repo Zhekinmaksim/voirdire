@@ -1,6 +1,7 @@
 import React from 'react';
 import {AbsoluteFill, useCurrentFrame} from 'remotion';
 import {Caption, Film, Metal, Panel, Rule, Stage} from '../components/Chrome';
+import {Brand} from '../components/Brand';
 import {ramp, rise} from '../anim';
 import {C, FILM, MONO, PAD} from '../theme';
 import {BAR, ownFrames} from '../timing';
@@ -18,9 +19,7 @@ export const Title: React.FC = () => {
   return (
     <Stage span={ownFrames('title')} push={0.03}>
       <AbsoluteFill style={{padding:PAD, justifyContent:'center'}}>
-        <div style={{fontSize:200, lineHeight:1, letterSpacing:'-0.03em', ...rise(f,0.1,{bars:0.5})}}>
-          <Metal sweep={[BAR*0.4,BAR*1.9]}>Voirdire</Metal>
-        </div>
+        <Brand width={1280} style={rise(f,0.1,{bars:0.5})}/>
         <div style={{marginTop:34,fontSize:48,lineHeight:1.32,color:C.smoke,maxWidth:1380,...rise(f,0.65,{bars:0.5})}}>
           Bonded model claims. Behavioural evidence you can inspect.
         </div>
@@ -243,9 +242,10 @@ export const Close: React.FC = () => {
   return (
     <Stage span={ownFrames('close')} atmosphere={0.85} push={0.025}>
       <AbsoluteFill style={{padding:PAD,justifyContent:'center'}}>
-        <div style={{fontSize:132,lineHeight:1.06,letterSpacing:'-0.03em',...rise(f,0.1,{bars:0.4})}}><Metal sweep={[BAR*0.3,BAR*1.8]}>Not proof. Testimony.</Metal></div>
-        <div style={{marginTop:40,fontSize:44,color:C.smoke,lineHeight:1.38,maxWidth:1510,...rise(f,0.65,{bars:0.4})}}>Observable behaviour, bounded claims, and a bond. Built on GenLayer Bradbury.</div>
-        <Caption style={{marginTop:50,fontSize:46,color:C.ash,...rise(f,1.1,{bars:0.35})}}>{release.site}</Caption>
+        <Brand width={680} style={rise(f,0.1,{bars:0.4})}/>
+        <div style={{marginTop:34,fontSize:112,lineHeight:1.06,letterSpacing:'-0.03em',...rise(f,0.35,{bars:0.4})}}><Metal sweep={[BAR*0.5,BAR*1.8]}>Not proof. Testimony.</Metal></div>
+        <div style={{marginTop:32,fontSize:44,color:C.smoke,lineHeight:1.38,maxWidth:1510,...rise(f,0.65,{bars:0.4})}}>Observable behaviour, bounded claims, and a bond. Built on GenLayer Bradbury.</div>
+        <Caption style={{marginTop:38,fontSize:46,color:C.ash,...rise(f,1.1,{bars:0.35})}}>{release.site}</Caption>
       </AbsoluteFill>
     </Stage>
   );

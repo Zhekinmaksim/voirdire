@@ -1,0 +1,13 @@
+{
+  "schema": "voirdire-brand/1",
+  "asset": "voirdire-logo-obsidian.png",
+  "sha256": "30e59f01aaa58bc6802162861e4282ece28b3136ef38ccbe3bc7be34bad3579e",
+  "width": 2172,
+  "height": 724,
+  "lockup_view": {
+    "x": 304,
+    "y": 184,
+    "width": 1574,
+    "height": 338
+  }
+}

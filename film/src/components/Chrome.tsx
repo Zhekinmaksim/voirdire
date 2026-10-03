@@ -2,6 +2,7 @@ import React from 'react';
 import {AbsoluteFill, Easing, interpolate, useCurrentFrame} from 'remotion';
 import {C, EDGE, FILM, METAL_TEXT, MONO, SANS, STEEL} from '../theme';
 import {BAR} from '../timing';
+import {Brand} from './Brand';
 
 /**
  * Film grain, and the fix for the flicker.
@@ -233,6 +234,7 @@ export const Frame: React.FC<{total: number}> = ({total}) => {
           left: 128,
           right: 128,
           display: 'flex',
+          alignItems: 'center',
           justifyContent: 'space-between',
           fontFamily: MONO,
           fontSize: 24,
@@ -240,7 +242,7 @@ export const Frame: React.FC<{total: number}> = ({total}) => {
           color: C.iron,
         }}
       >
-        <span>voirdire</span>
+        <Brand width={190}/>
         <span>{label}</span>
       </div>
       <div style={{position: 'absolute', left: 128, right: 128, bottom: 56}}>

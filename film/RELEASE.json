@@ -1,6 +1,6 @@
 {
   "schema": "voirdire-film-artifact/1",
-  "rendered_at": "2026-10-03T18:00:47.875446+00:00",
+  "rendered_at": "2026-10-03T18:50:51.395231+00:00",
   "artifact": "../voirdire-60s.mp4",
   "remotion": "4.0.523",
   "duration_video_seconds": 60,
@@ -9,7 +9,7 @@
   "height": 1080,
   "fps": 30,
   "container_duration_seconds": 60.053333,
-  "bytes": 40817495,
+  "bytes": 41071656,
   "codec_video": "h264",
   "codec_audio": "aac",
   "audio_sample_rate": 48000,
@@ -20,17 +20,18 @@
     "typecheck": "PASS",
     "full_render": "PASS",
     "full_decode": "PASS",
-    "scene_contact_review": "12 settled scene samples, no visible clipping"
+    "scene_contact_review": "12 settled scene samples; opening and close additionally reviewed at full resolution; no visible clipping or image-matte rectangle",
+    "shared_brand": "PASS: website and film use identical hash-bound source PNG and viewport"
   },
   "files_sha256": {
     "src/Root.tsx": "cf2f80e38ff29974bbc01d2c2ac8c4d2a5accfb671fbba47ed00ce2dd3576448",
     "src/Video.tsx": "993e69c5b2e1f547419d1e813ad5fc677809157ff4e8fefa3510e1ee85d50f6a",
     "src/anim.ts": "d5ae27465d34062ad115d1325fb5707423906969b972c37ec75156207bc660f3",
-    "src/components/Chrome.tsx": "51b6a8f7b608fceadfcd27a323ce476cd3996b751c6e1f45cd199b876a7e7eda",
+    "src/components/Chrome.tsx": "f1a718194ebf6151c50365d5879633731e1e8d924fcd15d9d3fe96945608dbab",
     "src/fonts.ts": "7ea6c66d8a756736e94b92c296860b13f717402090d73354af70c83364e1023b",
     "src/index.ts": "5462d3268136731ce43bfd7c5072ea1ba48b51fec94fa30076f5044f4b39e4a2",
     "src/release.json": "9e4385f7fccdddd40cf32407ddfa1eaa5f95899e1d3ea9b2d43faa1d38a10aca",
-    "src/scenes/index.tsx": "5218c1e82f3845b584e3c94ed04bea1a4f97e6045cc1123fe3dbceb65b6ced51",
+    "src/scenes/index.tsx": "71057849541252a9422d88b9e4466aca39bceb9ae1a38f88541046aaa3c093f1",
     "src/theme.ts": "cdac4270032cbec654140ffbbe952120a3422e6299b81857365e61c756d24d50",
     "src/timing.ts": "8a362b69eb7b1e123017cd857ab4cd03f15d64df9279b07f6f68259673c5218d",
     "package.json": "7a8cb891fd57fe1141488b3d31e5684d98c6b4814df16c6b389a3269f067f162",
@@ -43,6 +44,21 @@
     "public/fonts/GeistMono-Regular.woff2": "67b27e8a75395c074cc23656acf208ccd69e674da4cad2c7d6dfa254272ad7e8",
     "public/fonts/OFL.txt": "c683bfbcc7e087f5d37a54ef628f10387c451a83ddc459b151403a164ac46c90",
     "public/fonts/SOURCE.json": "be51d363ce457312c9144b8bc78f88d235f1f220d30b02092c910960dc68c768",
-    "../voirdire-60s.mp4": "fcb2d3f0f5159edff0bdc6f3172ca5d7f0e5b2c3466f94d81274d8dc5e16f199"
+    "src/components/Brand.tsx": "d8435eef8d1538782adcc9b01f3e715fde2bfc4f3081249b7406d8fe96008a67",
+    "src/brand.json": "1e68becd29623766f7c810feeef7899a6c725d5098f50d850c4df0a31de7208a",
+    "public/brand/voirdire-logo-obsidian.png": "30e59f01aaa58bc6802162861e4282ece28b3136ef38ccbe3bc7be34bad3579e",
+    "../design/brand/brand.json": "b5382f837e90c5c56038f9c681872cdccd821e89038ae18fd69a06b37f526b74",
+    "../design/brand/voirdire-logo-obsidian.png": "30e59f01aaa58bc6802162861e4282ece28b3136ef38ccbe3bc7be34bad3579e",
+    "../scripts/prepare_brand.py": "d3e63fbb486ddf5f8f8535b9f7da31f31bf149e6ab23fcca9ba6fa7a0c0a6d3b",
+    "../voirdire-60s.mp4": "61371e7bbecab0e1cd905ff38966cb6e8a797e62f6fb76326c6a12a44a350689"
+  },
+  "branding": {
+    "source": "../design/brand/voirdire-logo-obsidian.png",
+    "source_sha256": "30e59f01aaa58bc6802162861e4282ece28b3136ef38ccbe3bc7be34bad3579e",
+    "scenes": [
+      "title",
+      "close",
+      "standing frame"
+    ]
   }
 }

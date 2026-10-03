@@ -29,7 +29,7 @@ jobs:
         run: |
           npm --prefix film ci
           npm --prefix film run typecheck
-          git diff --exit-code -- film/src/release.json
+          git diff --exit-code -- film/src/release.json film/src/brand.json public/brand film/public/brand
       # Regenerate fixtures after building, so a committed live matrix is not overwritten before its gate.
       - run: make -C chain-and-site fixture matrix page
       - name: Fixture must be undecidable

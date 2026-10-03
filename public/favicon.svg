@@ -1,1 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#101110"/><path d="M15 17h8l9 24 9-24h8L35 49h-6Z" fill="#bce5cf"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <title>Voirdire</title>
+  <defs>
+    <linearGradient id="silver" x2="0" y2="1"><stop stop-color="#eceff3"/><stop offset="1" stop-color="#9ca2ac"/></linearGradient>
+    <linearGradient id="facet" x2="0" y2="1"><stop stop-color="#b0d7ef"/><stop offset=".55" stop-color="#c9baf0"/><stop offset="1" stop-color="#c4e5e5"/></linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="40" fill="#101010"/>
+  <path d="M40 48H80L121 137V210H104Z M176 48H216L152 210H135V137Z" fill="url(#silver)"/>
+  <path d="M94 78L121 137V184Z M162 78L135 137V184Z" fill="url(#facet)"/>
+</svg>

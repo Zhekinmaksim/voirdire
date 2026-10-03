@@ -5,6 +5,7 @@ import json
 from html import escape
 from pathlib import Path
 import shutil
+from prepare_brand import prepare_brand
 
 root = Path(__file__).resolve().parents[1]
 public = root / 'public'
@@ -121,8 +122,10 @@ else:
     (research/'matrix.json').unlink(missing_ok=True)
     intro = 'The fresh v3 result below is limited to its frozen three-model test scope.' if v3 else 'No validated cross-family measurement is published yet.'
     operational = 'The application records collector-attested evidence on Bradbury. Profile results are behavioural classifications, not proof of model identity. Transaction finality and settlement must be checked independently.' if v3 else 'The application records collector-attested evidence on Bradbury. Those records are behavioural testimony, not proof of model identity. On-chain LLM adjudication is experimental and can fail to reach consensus.'
-    (research/'index.html').write_text('''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><title>Voirdire — measurement status</title><style>body{background:#101110;color:#ddd;font:18px/1.6 system-ui;max-width:960px;margin:8vh auto;padding:24px}a{color:#bce5cf}h1,h2{font-weight:450}section{border-top:1px solid #444;margin-top:36px;padding-top:16px}.table-wrap{overflow-x:auto}table{border-collapse:collapse;font-size:14px}td,th{text-align:left;padding:10px;border-bottom:1px solid #444;vertical-align:top}.hash{overflow-wrap:anywhere;font-size:14px}</style><a href="/">← Voirdire</a><h1>Measurement status</h1><p>'''+intro+'</p>'+report+original+'<p>'+operational+'''</p><p><a href="/release-verification.json">Live protocol controls and native withdrawal status</a></p><p>Synthetic fixture scores are not published here.</p><p><a href="https://github.com/Zhekinmaksim/voirdire/tree/main/chain-and-site/calibration">Source, methodology and limitations</a></p></html>''')
+    (research/'index.html').write_text('''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/brand/brand.css"><title>Voirdire — measurement status</title><style>body{background:#101110;color:#ddd;font:18px/1.6 system-ui;max-width:960px;margin:8vh auto;padding:24px}a{color:#bce5cf}h1,h2{font-weight:450}section{border-top:1px solid #444;margin-top:36px;padding-top:16px}.table-wrap{overflow-x:auto}table{border-collapse:collapse;font-size:14px}td,th{text-align:left;padding:10px;border-bottom:1px solid #444;vertical-align:top}.hash{overflow-wrap:anywhere;font-size:14px}.research-brand{display:inline-block;margin-bottom:20px}.research-brand .brand-lockup{--brand-width:190px}</style><a class="research-brand" href="/" aria-label="Voirdire home"><span class="brand-lockup"><img src="/brand/voirdire-logo-obsidian.png" width="2172" height="724" alt="Voirdire"></span></a><h1>Measurement status</h1><p>'''+intro+'</p>'+report+original+'<p>'+operational+'''</p><p><a href="/release-verification.json">Live protocol controls and native withdrawal status</a></p><p>Synthetic fixture scores are not published here.</p><p><a href="https://github.com/Zhekinmaksim/voirdire/tree/main/chain-and-site/calibration">Source, methodology and limitations</a></p></html>''')
 
 if v3:
     from prepare_landing import prepare_landing
     prepare_landing()
+
+prepare_brand()

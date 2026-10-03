@@ -3,6 +3,9 @@
 The updated v3 cut replaces `../voirdire-60s.mp4`. It uses real confirmation
 counts, explicit trusted-collector limits and finalized Bradbury testnet controls.
 The original visual system, musical edit and twelve-scene timing are retained.
+The shared Voirdire logo is included in the title, close and standing frame.
+Its original PNG bytes and viewport are bound by `../design/brand/brand.json`;
+the website and film use the same asset and luminance-mask presentation.
 
 - TypeScript and verified release-data generation pass.
 - The full composition renders: H.264, 1920×1080, 30 fps, 1,800 frames / 60 seconds.
@@ -10,8 +13,10 @@ The original visual system, musical edit and twelve-scene timing are retained.
   audio padding. The complete MP4 decodes without errors.
 - Mean decoded audio level: -16.8 dBFS. Peak: -0.5 dBFS; no sample clipping.
 - Twelve settled scene samples were inspected, plus full-resolution previews
-  of the matrix and live-control panels. No visible clipping was found.
+  of the opening and closing brand layouts. No visible clipping was found.
   This is a sampled visual review, not an assertion that every frame was inspected.
+- The opening and closing logo layouts were additionally inspected at full
+  resolution after integration; the image matte does not hide the grain.
 - Geist Sans and Geist Mono Regular are bundled and awaited before rendering.
   Their official source commit, license and hashes are included in `public/fonts/`.
 - Remotion packages are pinned to 4.0.523. The transitive `fast-uri` dependency

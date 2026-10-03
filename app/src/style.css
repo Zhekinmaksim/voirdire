@@ -10,8 +10,9 @@ button:hover{border-color:var(--ash)}
 button:disabled{cursor:not-allowed;opacity:.45}
 header,main,footer{max-width:1200px;margin:auto;padding:24px 28px}
 header{display:flex;gap:24px;align-items:center;border-bottom:1px solid var(--graphite);min-height:76px}
-.brand{font-weight:400;font-size:22px;letter-spacing:-.01em;text-decoration:none;white-space:nowrap}
-.brand span{color:var(--smoke);font-size:14px;-webkit-text-fill-color:var(--smoke)}
+.brand{display:flex;gap:16px;align-items:center;font-weight:400;font-size:22px;letter-spacing:-.01em;text-decoration:none;white-space:nowrap}
+.brand .brand-lockup{--brand-width:170px}
+.brand-context{color:var(--smoke);font-size:14px}
 header .wallet{margin-left:auto;white-space:nowrap}
 .eyebrow,th,.tag{font:12px var(--mono);letter-spacing:-.022em;color:var(--ash)}
 .hero{padding:36px 0 38px;display:flex;gap:32px;justify-content:space-between;align-items:end;border-bottom:1px solid var(--graphite);margin-bottom:24px}
@@ -65,7 +66,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.6 var(--mono);color:
 footer{border-top:1px solid var(--graphite);margin-top:64px;font-size:13px;color:var(--smoke);display:flex;gap:24px;justify-content:space-between;padding-top:32px;padding-bottom:48px}
 .spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--iron);border-top-color:var(--chalk);border-radius:50%;animation:spin 1s linear infinite;margin-right:8px}
 @keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:980px){.hero{display:block}.hero>a{display:inline-block;margin-top:24px}.brand span{display:none}}
+@media(max-width:980px){.hero{display:block}.hero>a{display:inline-block;margin-top:24px}.brand-context{display:none}}
 @media(max-width:700px){header,main,footer{padding-left:22px;padding-right:22px}header{gap:12px;flex-wrap:wrap}.brand{font-size:20px}header>.tag{font-size:11px}.hero{padding-top:20px}.grid,.detail-grid{grid-template-columns:1fr}.panel{padding:20px}.wide{grid-column:auto}footer{display:block}footer span{display:block;margin-bottom:14px}.wallet{font-size:12px;padding:10px}nav{gap:2px}nav button{padding:10px 12px}.actions>button{flex:1 1 auto}.panel .panel{padding:16px}.detail-grid{gap:16px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-@media(max-width:700px){header{gap:8px}.brand{font-size:18px}header>.tag{font-size:10px;padding:4px 6px}.wallet{font-size:11px;padding:8px}}
+@media(max-width:700px){header{gap:8px}.brand{font-size:18px}.brand .brand-lockup{--brand-width:140px}header>.tag{font-size:10px;padding:4px 6px}.wallet{font-size:11px;padding:8px}}

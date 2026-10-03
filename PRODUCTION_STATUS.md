@@ -114,6 +114,12 @@ profile, exercised the registration/examination/history screens, corpus filters
 and keyboard disclosure, and found no page errors or horizontal overflow at
 390 px. Reduced motion suppresses the wordmark animation.
 
+The shared Voirdire logo is integrated into the main page, registry and research,
+with a matching split-V favicon. The source PNG and viewport are hash-bound in
+`design/brand/brand.json` and copied by the build for both the site and film.
+Mobile layouts at 390 px show the logo without horizontal overflow. The film
+includes the same logo in the opening, closing and standing frame.
+
 The updated Remotion cut passes typechecking, full 1,800-frame rendering and
 complete MP4 decoding. It replaces synthetic figures and historical captions
 with validated v3 confirmation, fixed-collector limits, finalized testnet controls

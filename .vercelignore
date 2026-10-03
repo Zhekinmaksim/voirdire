@@ -10,3 +10,4 @@ chain-and-site/runs
 round*.json
 runs
 .playwright-cli
+output

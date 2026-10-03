@@ -4,8 +4,8 @@ Bonded model declarations and collector-attested behavioural examinations on
 GenLayer Bradbury. This is behavioural testimony, **not proof of model identity**.
 Bradbury uses testnet GEN; this repository is not a real-money deployment.
 
-- Website: https://voirdire-mu.vercel.app
-- Working application: https://voirdire-mu.vercel.app/app/
+- Website: https://voirdire.pro
+- Working application: https://voirdire.pro/app/
 - Source: https://github.com/Zhekinmaksim/voirdire
 - Contract deployment configuration: `public/deployment.json`
 - Full contract source: `chain-and-site/contracts/voirdire.py`
@@ -17,6 +17,11 @@ design. Its table shows the fresh v3 confirmation counts, not fixture separation
 scores. The working registry is at `/app/` in the same visual system; research
 and release evidence remain at their existing URLs. The landing page is generated
 from `app/home.tpl.html` only after the release bindings pass `prepare_web.py`.
+
+The Voirdire logo is shared by the landing page, registry, research and film.
+`design/brand/brand.json` binds the original PNG and its visible viewport;
+`scripts/prepare_brand.py` verifies and copies the same bytes into the website
+and Remotion assets. The favicon is a small SVG adaptation of the split V.
 
 ## Product flow
 
@@ -150,11 +155,12 @@ three finalized controls and verified withdrawal of testnet GEN. The original
 design and music edit remain; Geist fonts are now bundled. The earlier synthetic
 cut is archived in Git history.
 
+The brand logo appears in the opening, closing and standing frame of the film.
+Its source PNG and viewport match the website; the original music and measured
+evidence remain unchanged.
+
 The complete new MP4 was rendered and decoded successfully. See
 [film/AUDIT.md](film/AUDIT.md) and [film/RELEASE.json](film/RELEASE.json) for the
 checks and artifact hashes. The video is a repository/local release artifact,
 excluded from Vercel deployment. Render with `cd film && npm ci && npm run render`;
-the film's displayed facts are validated against the product release first.
-The full composition was re-rendered and decoded successfully during the current
-review; see [film/AUDIT.md](film/AUDIT.md) for outdated captions and font fallback
-limitations that must be addressed before a current launch cut.
+the film's displayed facts and brand asset are validated before rendering.

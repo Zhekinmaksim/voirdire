@@ -3,6 +3,7 @@
 The current 60-second cut presents real v3 confirmation and finalized settlement
 controls on **GenLayer Bradbury testnet**. The metal, obsidian and interference
 film design, twelve-scene timing and original music edit are preserved.
+The current Voirdire logo appears in the title, close and standing frame.
 
 The ready-to-watch file is `../voirdire-60s.mp4`. The earlier synthetic cut remains
 recoverable from Git history; it is not current release evidence.
@@ -88,6 +89,12 @@ followed by 232–264 seconds, with short fades at the splice. Run
 last 24 frames.
 
 ## Typography and materials
+
+`../design/brand/brand.json` binds the selected source logo PNG by its dimensions,
+SHA-256 and visible viewport. The pre-render step verifies it and copies its
+unchanged bytes to `public/brand/`, matching the website. `components/Brand.tsx`
+uses Remotion's awaited `Img` and the same luminance mask as the website so the
+opaque image matte does not cover the grain. No network image is needed.
 
 Geist Sans Regular and Geist Mono Regular are bundled in `public/fonts/`, loaded
 through `@remotion/fonts`, and awaited before any frame can render. Failed font
