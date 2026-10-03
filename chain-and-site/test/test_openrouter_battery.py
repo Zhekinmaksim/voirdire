@@ -249,6 +249,17 @@ class BatteryTests(unittest.TestCase):
             with self.assertRaises(ValueError): O.authorize_recovery(out,events,policy,current=5000)
             self.assertEqual(len(O.records(out/"recovery.jsonl")),3)
 
+    def test_one_retry_identity_policy_survives_resume(self):
+        with tempfile.TemporaryDirectory() as d:
+            out=Path(d); policy=self.recovery_policy()
+            policy["max_identity_retries"]=1
+            events=self.failed_events(identity="x")
+            O.authorize_recovery(out,events,policy,current=100)
+            events.append({"event":"resolved_failed","identity":"x","cost_usd":"0.1"})
+            events += self.failed_events(identity="x")
+            with self.assertRaises(ValueError):
+                O.authorize_recovery(out,events,policy,current=500)
+
     def test_recovery_identity_limit_includes_earlier_manual_attempts(self):
         events=[]
         for attempt in range(2):

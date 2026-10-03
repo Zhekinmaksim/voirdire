@@ -1,0 +1,23 @@
+{
+  "release": "voirdire-round-int-v3",
+  "created_at": "2026-10-03T15:05:32.077033+00:00",
+  "status": "FROZEN_UNVALIDATED",
+  "development_screen": "GO_FOR_FRESH_KNOWN_SCOPE_ONLY",
+  "files_sha256": {
+    "profile.json": "023fabdd55527c3637be1ba0886c60a4ce586527763558b7094f13f34d4e2a71",
+    "classifier.py": "a04590b9587b0b2fc8322a2bb7ff884756bfc1ed9a0659bea5794ecd8a53fe18",
+    "confirmation-plan.json": "c8b8fe5076e34d85546173babd600bcf8fd33bfe4e10123e07ab7209878b90fd",
+    "endpoint-preflight.json": "e636734ca32dae6c95cfab645286abb3cd3908bd8bbe625afed5a54963d9b09a",
+    "development-preflight.json": "bfebc2eddc04bb15dfd8113ee036e55bd5653a67406c878149822c6121d6090e"
+  },
+  "gate_source_sha256": "d2eba77ab43dd19b0e30edfc40898c445c3ad9f412ebdb297c8e6ed6ec07d542",
+  "runner_source_sha256": "de53eb2787d6c96ab80f56f31f2daf2addcc3611486faef9cc858aa49f5ed092",
+  "old_dataset_sha256": "1562a7e25234adec12971b9b9b0d88a69d6705cc9d4253a04c39f78ff543d466",
+  "thresholds": {
+    "correct_all_lower95_per_model": 0.75,
+    "false_accusation_upper95_per_model": 0.1
+  },
+  "fresh_budget_usd": "2.00",
+  "payout_approved": false,
+  "unknown_detection_certified": false
+}

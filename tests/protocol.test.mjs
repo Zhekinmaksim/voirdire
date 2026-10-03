@@ -158,3 +158,49 @@ test('journal recovery links original EVM submission and recovered IC id without
  assert.equal(txs.length,1);assert.equal(txs[0].status,'FINALIZED');assert.equal(txs[0].evmTransactionHash,evm);
  assert.deepEqual(recordAttestationResult(txs,{alreadyAttested:true},'0xabc',3),txs);
 });
+
+test('v3 plan binds profile while v2 canonical bytes exclude unrelated profile fields',async()=>{
+ const v2=envelope(),before=canonicalPlan(v2);v2.profile_hash='1'.repeat(64);
+ assert.equal(canonicalPlan(v2),before);
+ const v3={...v2,version:'voirdire/3',transcripts:v2.transcripts.map(t=>({...t,finish_reason:'stop'}))};validateEnvelope(v3);
+ const expected=JSON.stringify({claim_id:v3.claim_id,endpoint:v3.endpoint,nonce:v3.nonce,profile_hash:v3.profile_hash,transcripts:v3.transcripts.map(({probe_class,probe_id,sent})=>({probe_class,probe_id,sent})),version:'voirdire/3'});
+ assert.equal(canonicalPlan(v3),expected);
+ const digest=await digestPlan(v3);v3.profile_hash='2'.repeat(64);assert.notEqual(await digestPlan(v3),digest);
+ for(const profile_hash of [undefined,'bad','A'.repeat(64)])assert.throws(()=>validateEnvelope({...v3,profile_hash}));
+ const restored=restoreEvidenceBundle({envelope:v3,proof:'opaque',downloaded:true});assert.equal(restored.envelope.profile_hash,v3.profile_hash);
+});
+import {requireEnvelopeProtocol} from '../app/src/protocol.js';
+test('saved plans cannot be reused against another protocol or frozen profile',()=>{
+ const v2=envelope(),v3={...v2,version:'voirdire/3',profile_hash:'a'.repeat(64),transcripts:v2.transcripts.map(t=>({...t,finish_reason:'stop'}))};
+ assert.equal(requireEnvelopeProtocol(v2,{version:'voirdire/2'}),v2);
+ assert.equal(requireEnvelopeProtocol(v3,{version:'voirdire/3',profile_hash:v3.profile_hash}),v3);
+ assert.throws(()=>requireEnvelopeProtocol(v2,{version:'voirdire/3',profile_hash:v3.profile_hash}));
+ assert.throws(()=>requireEnvelopeProtocol(v3,{version:'voirdire/3',profile_hash:'b'.repeat(64)}));
+});
+
+import {profileRegistration,frozenProfileProbes,verifyPublicProfile,responseFinishNote} from '../app/src/protocol.js';
+import {createHash} from 'node:crypto';
+test('v3 approval binds exact public bytes, scope and all six corpus prompts',async()=>{
+ const models={'gpt-class':'openai/gpt-4o-mini','llama-class':'meta-llama/llama-3.3-70b-instruct','mistral-class':'mistralai/mistral-small-3.2-24b-instruct'};
+ const corpus=Array.from({length:6},(_,i)=>({probe_id:`p${i}`,class:'tokenizer_artifact',carrier:`prompt ${i}`,status:'active'}));
+ const profile={probe_ids:corpus.map(p=>p.probe_id),supported_models:models,probe_classes:Object.fromEntries(corpus.map(p=>[p.probe_id,p.class])),probe_prompt_sha256:Object.fromEntries(corpus.map(p=>[p.probe_id,createHash('sha256').update(p.carrier).digest('hex')]))};
+ const bytes=new TextEncoder().encode(JSON.stringify(profile));
+ const protocol={version:'voirdire/3',profile_status:'APPROVED',profile_hash:createHash('sha256').update(bytes).digest('hex'),probe_ids:profile.probe_ids,supported_models:models,required_rounds:1};
+ assert.deepEqual(await verifyPublicProfile(bytes,protocol,corpus),profile);
+ await assert.rejects(verifyPublicProfile(bytes,{...protocol,profile_status:'UNVALIDATED_INTEGER_CANDIDATE'},corpus),/not approved/);
+ await assert.rejects(verifyPublicProfile(new TextEncoder().encode(JSON.stringify(profile)+' '),protocol,corpus),/bytes/);
+ await assert.rejects(verifyPublicProfile(bytes,protocol,corpus.map((p,i)=>i===0?{...p,carrier:'changed'}:p)),/prompt/);
+ assert.deepEqual(profileRegistration(protocol,'gpt-class'),{agent:'openrouter:openai/gpt-4o-mini',model:'gpt-class',version:'openai/gpt-4o-mini',rounds:1});
+ assert.throws(()=>profileRegistration(protocol,'unknown-family'));
+ assert.deepEqual(frozenProfileProbes(protocol,[...corpus].reverse()).map(p=>p.probe_id),profile.probe_ids);
+ assert.throws(()=>frozenProfileProbes(protocol,corpus,['p0']),/fresh probes/);
+});
+test('v3 preserves token-limit evidence and never binds future finish reasons into the plan',async()=>{
+ const e={...envelope(),version:'voirdire/3',profile_hash:'a'.repeat(64)};
+ assert.throws(()=>validateEnvelope(e),/finish reason/);
+ e.transcripts[0].got='';validateEnvelope(e);
+ const before=await digestPlan(e);e.transcripts[0].got='partial response';e.transcripts[0].finish_reason='length';
+ validateEnvelope(e);assert.equal(await digestPlan(e),before);assert.match(responseFinishNote(e.transcripts[0]),/partial/);
+ const restored=restoreEvidenceBundle({envelope:e,proof:'opaque'});assert.equal(restored.envelope.transcripts[0].finish_reason,'length');
+ e.transcripts[0].finish_reason='content_filter';assert.throws(()=>validateEnvelope(e),/finish reason/);
+});

@@ -9,3 +9,4 @@ chain-and-site/runs
 .env*
 round*.json
 runs
+.playwright-cli

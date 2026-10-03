@@ -1,0 +1,79 @@
+{
+  "gpt-class": {
+    "model": "openai/gpt-4o-mini",
+    "tag": "openai",
+    "status": 0,
+    "pricing": {
+      "prompt": "0.00000015",
+      "completion": "0.0000006",
+      "input_cache_read": "0.000000075",
+      "discount": 0
+    },
+    "context_length": 128000,
+    "supported_parameters": [
+      "seed",
+      "max_tokens",
+      "response_format",
+      "structured_outputs",
+      "tools",
+      "tool_choice",
+      "frequency_penalty",
+      "logit_bias",
+      "logprobs",
+      "prediction",
+      "presence_penalty",
+      "stop",
+      "temperature",
+      "top_logprobs",
+      "top_p",
+      "web_search_options"
+    ]
+  },
+  "llama-class": {
+    "model": "meta-llama/llama-3.3-70b-instruct",
+    "tag": "groq",
+    "status": 0,
+    "pricing": {
+      "prompt": "0.00000059",
+      "completion": "0.00000079",
+      "input_cache_read": "0.000000295",
+      "discount": 0
+    },
+    "context_length": 131072,
+    "supported_parameters": [
+      "max_tokens",
+      "temperature",
+      "top_p",
+      "stop",
+      "seed",
+      "response_format",
+      "tools",
+      "tool_choice"
+    ]
+  },
+  "mistral-class": {
+    "model": "mistralai/mistral-small-3.2-24b-instruct",
+    "tag": "mistral/eu",
+    "status": 0,
+    "pricing": {
+      "prompt": "0.0000001",
+      "completion": "0.0000003",
+      "input_cache_read": "0.00000001",
+      "discount": 0
+    },
+    "context_length": 32768,
+    "supported_parameters": [
+      "max_tokens",
+      "temperature",
+      "top_p",
+      "stop",
+      "frequency_penalty",
+      "presence_penalty",
+      "seed",
+      "response_format",
+      "structured_outputs",
+      "tools",
+      "tool_choice"
+    ]
+  }
+}

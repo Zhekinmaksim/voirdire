@@ -461,12 +461,14 @@ def authorize_recovery(out, events, policy, current=None):
 
 
 def supervise(plan, out, budget, key, concurrency=9, min_interval=1.2,
-              max_retries=12, cooldown=60):
+              max_retries=12, cooldown=60, max_identity_retries=2):
     """Explicit bounded recovery policy; no unaccounted or hidden network retries."""
     if type(max_retries) is not int or not 0 <= max_retries <= 12 or not 60 <= cooldown < float("inf"):
         raise ValueError("supervisor requires at most 12 recoveries and cooldown >=60 seconds")
+    if type(max_identity_retries) is not int or not 1 <= max_identity_retries <= 2:
+        raise ValueError("identity retry allowance must be1 or2")
     out.mkdir(parents=True, exist_ok=True)
-    policy = {"version": 1, "max_retries": max_retries, "max_identity_retries": 2,
+    policy = {"version": 1, "max_retries": max_retries, "max_identity_retries": max_identity_retries,
               "cooldown_seconds": cooldown, "budget_usd": str(money(budget)),
               "concurrency": concurrency, "min_interval": min_interval,
               "plan_sha256": hashlib.sha256(json.dumps(plan, sort_keys=True).encode()).hexdigest()}
@@ -539,6 +541,7 @@ def main():
     v.add_argument("--min-interval", type=float, default=1.2)
     v.add_argument("--max-retries", type=int, default=12)
     v.add_argument("--cooldown", type=float, default=60)
+    v.add_argument("--max-identity-retries", type=int, default=2)
     c = sub.add_parser("reconcile", help="explicitly debit the full ceiling of one failed attempt")
     c.add_argument("--out", type=Path, required=True)
     c.add_argument("--identity", required=True)
@@ -549,7 +552,7 @@ def main():
     try:
         if args.command == "supervise":
             return supervise(json.loads(args.plan.read_text()), args.out, args.budget, load_key(args.env),
-                             args.concurrency, args.min_interval, args.max_retries, args.cooldown)
+                             args.concurrency, args.min_interval, args.max_retries, args.cooldown, args.max_identity_retries)
         if args.command == "status":
             return status(args.out)
         if args.command == "reconcile":

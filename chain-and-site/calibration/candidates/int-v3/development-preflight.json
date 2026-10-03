@@ -1,0 +1,60 @@
+{
+  "status": "DEVELOPMENT_ONLY_NOT_FRESH_CONFIRMATION",
+  "integer_source_sha256": "a04590b9587b0b2fc8322a2bb7ff884756bfc1ed9a0659bea5794ecd8a53fe18",
+  "profile_sha256": "023fabdd55527c3637be1ba0886c60a4ce586527763558b7094f13f34d4e2a71",
+  "quality_rule": "V3 all six finish_reason stop OR length, nonempty, at most4096characters; otherwise entire round ABSTAIN.",
+  "comparison_rounds": 315,
+  "float_integer_decision_differences_before_quality": [],
+  "max_absolute_single_feature_quantization_error": 9.994134648749764e-07,
+  "confusion": {
+    "gpt-class": {
+      "gpt-class": 95,
+      "llama-class": 0,
+      "mistral-class": 0,
+      "ABSTAIN": 10
+    },
+    "llama-class": {
+      "gpt-class": 0,
+      "llama-class": 103,
+      "mistral-class": 0,
+      "ABSTAIN": 2
+    },
+    "mistral-class": {
+      "gpt-class": 0,
+      "llama-class": 0,
+      "mistral-class": 95,
+      "ABSTAIN": 10
+    }
+  },
+  "metrics": {
+    "gpt-class": {
+      "correct": 95,
+      "abstain": 10,
+      "wrong": 0,
+      "quality_abstentions": 0,
+      "coverage": 0.9047619047619048,
+      "correct_all_lower95": 0.8335087237779633,
+      "false_accusation_upper95": 0.035294076929109894
+    },
+    "llama-class": {
+      "correct": 103,
+      "abstain": 2,
+      "wrong": 0,
+      "quality_abstentions": 0,
+      "coverage": 0.9809523809523809,
+      "correct_all_lower95": 0.933194403305581,
+      "false_accusation_upper95": 0.035294076929109894
+    },
+    "mistral-class": {
+      "correct": 95,
+      "abstain": 10,
+      "wrong": 0,
+      "quality_abstentions": 0,
+      "coverage": 0.9047619047619048,
+      "correct_all_lower95": 0.8335087237779633,
+      "false_accusation_upper95": 0.035294076929109894
+    }
+  },
+  "go_for_fresh_closed_scope": true,
+  "unknown_detection_certified": false
+}

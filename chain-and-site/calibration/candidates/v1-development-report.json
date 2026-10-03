@@ -1,0 +1,60 @@
+{
+  "status": "DEVELOPMENT_ONLY_NOT_CONFIRMATION",
+  "fixed_rule_configurations": 1,
+  "candidate_sha256": "3cf5cdb7eaf478edc119d69243db034177a1ec860799e8e5c1814d9124c87994",
+  "rejection_radii": {
+    "gpt-class": 4.592679697623503,
+    "llama-class": 6.600095711444571,
+    "mistral-class": 14.411288449611503
+  },
+  "confusion": {
+    "gpt-class": {
+      "gpt-class": 95,
+      "llama-class": 0,
+      "mistral-class": 0,
+      "ABSTAIN": 10
+    },
+    "llama-class": {
+      "gpt-class": 0,
+      "llama-class": 103,
+      "mistral-class": 0,
+      "ABSTAIN": 2
+    },
+    "mistral-class": {
+      "gpt-class": 0,
+      "llama-class": 0,
+      "mistral-class": 95,
+      "ABSTAIN": 10
+    }
+  },
+  "metrics": {
+    "gpt-class": {
+      "correct": 95,
+      "abstain": 10,
+      "false_accusations": 0,
+      "coverage": 0.9047619047619048,
+      "correct_all_lower95": 0.8335087237779633,
+      "false_accusation_upper95": 0.035294076929109894
+    },
+    "llama-class": {
+      "correct": 103,
+      "abstain": 2,
+      "false_accusations": 0,
+      "coverage": 0.9809523809523809,
+      "correct_all_lower95": 0.933194403305581,
+      "false_accusation_upper95": 0.035294076929109894
+    },
+    "mistral-class": {
+      "correct": 95,
+      "abstain": 10,
+      "false_accusations": 0,
+      "coverage": 0.9047619047619048,
+      "correct_all_lower95": 0.8335087237779633,
+      "false_accusation_upper95": 0.035294076929109894
+    }
+  },
+  "development_screen_pass": true,
+  "go_for_fresh_closed_set_study": true,
+  "unknown_detection_certified": false,
+  "limitation": "95th percentile uses in-sample own-centroid training distances; old comparison used in prior model selection. This radius is not a validated unknown-model detector."
+}
