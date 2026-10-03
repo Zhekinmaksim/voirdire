@@ -17,6 +17,11 @@ jobs:
       - run: npm ci
       - run: make -C chain-and-site test
       - run: npm test
+      - name: Reproduce fresh v3 confirmation from published data
+        run: |
+          gzip -dc chain-and-site/calibration/data/openrouter-groq-merged.jsonl.gz > /tmp/voirdire-old.jsonl
+          python3 chain-and-site/scripts/round_confirmation_gate.py --release chain-and-site/calibration/candidates/int-v3 --run-dir chain-and-site/calibration/confirmation-v3 --old-source /tmp/voirdire-old.jsonl --out /tmp/voirdire-v3-audit.json
+          python3 -c 'import json; assert json.load(open("/tmp/voirdire-v3-audit.json")) == json.load(open("chain-and-site/calibration/confirmation-v3/gate.json"))'
       - run: python3 scripts/package_contract.py
       - run: git diff --exit-code -- public/voirdire.py public/voirdire.deploy.py public/voirdire.deploy.map.json
       - run: npm run build

@@ -85,7 +85,7 @@ test('confirmation is only available for inconsistent findings admitted by first
  for(const change of [{stage_b1:'PENDING'},{stage_b1:'INADMISSIBLE'},{stage_b2:'ADMISSIBLE'},{verdict:'PENDING'},{verdict:'INCONCLUSIVE'},{settled:true}])assert.equal(roundActions({...round,...change},{}).confirm,false);
 });
 
-import {trackWalletProvider} from '../app/src/wallet.js';
+import {trackWalletProvider,ensureWalletChain} from '../app/src/wallet.js';
 test('wallet EVM hash is recorded before SDK continuation; methods keep provider context',async()=>{
  const events=[], hash='0x'+'b'.repeat(64);
  const wallet={marker:7,request:async function(args){assert.equal(this.marker,7);events.push(args.method);return hash;},on:function(event,handler){assert.equal(this.marker,7);events.push(event);return handler;},removeListener:function(){assert.equal(this.marker,7);}};
@@ -191,6 +191,8 @@ test('v3 approval binds exact public bytes, scope and all six corpus prompts',as
  await assert.rejects(verifyPublicProfile(new TextEncoder().encode(JSON.stringify(profile)+' '),protocol,corpus),/bytes/);
  await assert.rejects(verifyPublicProfile(bytes,protocol,corpus.map((p,i)=>i===0?{...p,carrier:'changed'}:p)),/prompt/);
  assert.deepEqual(profileRegistration(protocol,'gpt-class'),{agent:'openrouter:openai/gpt-4o-mini',model:'gpt-class',version:'openai/gpt-4o-mini',rounds:1});
+ assert.deepEqual(profileRegistration(protocol,'llama-class','gpt-class'),{agent:'openrouter:openai/gpt-4o-mini',model:'llama-class',version:models['llama-class'],rounds:1});
+ assert.throws(()=>profileRegistration(protocol,'gpt-class','unknown-family'),/collection target/);
  assert.throws(()=>profileRegistration(protocol,'unknown-family'));
  assert.deepEqual(frozenProfileProbes(protocol,[...corpus].reverse()).map(p=>p.probe_id),profile.probe_ids);
  assert.throws(()=>frozenProfileProbes(protocol,corpus,['p0']),/fresh probes/);
@@ -203,4 +205,16 @@ test('v3 preserves token-limit evidence and never binds future finish reasons in
  validateEnvelope(e);assert.equal(await digestPlan(e),before);assert.match(responseFinishNote(e.transcripts[0]),/partial/);
  const restored=restoreEvidenceBundle({envelope:e,proof:'opaque'});assert.equal(restored.envelope.transcripts[0].finish_reason,'length');
  e.transcripts[0].finish_reason='content_filter';assert.throws(()=>validateEnvelope(e),/finish reason/);
+});
+test('ordinary wallets switch or add only the configured chain without requiring Snaps',async()=>{
+ const chain={id:4221,name:'Bradbury',nativeCurrency:{name:'GEN',symbol:'GEN',decimals:18},rpcUrls:{default:{http:['https://example.invalid']}}};
+ const calls=[];let active='0x1',added=false;
+ const wallet={async request(r){calls.push(r);if(r.method==='eth_chainId')return active;if(r.method==='wallet_switchEthereumChain'){if(!added)throw Object.assign(new Error('unknown chain'),{code:4902});active=r.params[0].chainId;return null;}if(r.method==='wallet_addEthereumChain'){added=true;return null;}throw Error('unsupported wallet method');}};
+ await ensureWalletChain(wallet,chain);assert.equal(active,'0x107d');assert.deepEqual(calls.map(c=>c.method),['eth_chainId','wallet_switchEthereumChain','wallet_addEthereumChain','wallet_switchEthereumChain','eth_chainId']);
+ assert.equal(calls[2].params[0].chainId,'0x107d');
+});
+test('wallet rejection or unsuccessful network switch prevents a send',async()=>{
+ const chain={id:4221};
+ await assert.rejects(ensureWalletChain({request:async r=>{if(r.method==='eth_chainId')return '0x1';throw Object.assign(new Error('user rejected'),{code:4001});}},chain),/user rejected/);
+ await assert.rejects(ensureWalletChain({request:async r=>r.method==='eth_chainId'?'0x1':null},chain),/No transaction was sent/);
 });

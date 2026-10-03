@@ -24,7 +24,10 @@ from genlayer import gl  # noqa: E402
 from model import ScriptedModel, InjectedModel  # noqa: E402
 
 import round as roundtool  # noqa: E402
-import voirdire as vd  # noqa: E402
+# Preserve reviewed v2 state-machine coverage when the active contract becomes v3.
+import importlib.util
+spec=importlib.util.spec_from_file_location('voirdire_v2_archive',os.path.join(ROOT,'test','archive','voirdire_v2.py'))
+vd=importlib.util.module_from_spec(spec);sys.modules[spec.name]=vd;spec.loader.exec_module(vd)
 from datetime import datetime, timezone
 
 class TransactionDateTime(datetime):

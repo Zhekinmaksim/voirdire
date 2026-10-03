@@ -1,3 +1,24 @@
+// Ordinary EIP-1193 transactions do not require a wallet-specific extension.
+export async function ensureWalletChain(provider, chain) {
+  const chainId = '0x' + BigInt(chain.id).toString(16);
+  if (BigInt(await provider.request({method:'eth_chainId'})) !== BigInt(chain.id)) {
+    try {
+      await provider.request({method:'wallet_switchEthereumChain',params:[{chainId}]});
+    } catch (error) {
+      if (Number(error.code) !== 4902) throw error;
+      await provider.request({method:'wallet_addEthereumChain',params:[{
+        chainId, chainName:chain.name, nativeCurrency:chain.nativeCurrency,
+        rpcUrls:chain.rpcUrls.default.http,
+        ...(chain.blockExplorers?.default?.url ? {blockExplorerUrls:[chain.blockExplorers.default.url]} : {}),
+      }]});
+      await provider.request({method:'wallet_switchEthereumChain',params:[{chainId}]});
+    }
+  }
+  if (BigInt(await provider.request({method:'eth_chainId'})) !== BigInt(chain.id)) {
+    throw new Error('Wallet did not switch to Bradbury. No transaction was sent.');
+  }
+}
+
 // Persist the EVM hash before the SDK waits for a receipt and resolves an IC ID.
 // Bind forwarded methods to the original provider (some wallets require `this`).
 export function trackWalletProvider(provider, onSubmitted) {

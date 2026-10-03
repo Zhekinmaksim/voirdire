@@ -97,8 +97,8 @@ estimation, signs once, records the EVM receipt, and then reads the Intelligent
 Contract receipt. Estimation failure aborts without signing; a mined revert is
 reported without automatic retry. An ACCEPTED receipt is provisional, not final.
 
-Verification: 143 contract state-machine checks also pass against the exact-source
-deployment wrapper. JavaScript tests cover collector boundaries, durable journal
+Verification: 143 archived v2 state-machine checks remain available. The active
+v3 source and its exact-source wrapper each pass30 v3 checks. JavaScript tests cover collector boundaries, durable journal
 races, finalization and browser protocol. Successful deployment and
 live consensus adjudication require separate network receipts.
 

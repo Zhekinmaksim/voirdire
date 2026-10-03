@@ -1,0 +1,1 @@
+{"event": "policy", "version": 1, "max_retries": 8, "max_identity_retries": 1, "cooldown_seconds": 60.0, "budget_usd": "2.00", "concurrency": 9, "min_interval": 1.2, "plan_sha256": "fefeb116b2538300e13b4ac097a5253c75d3a1c384f4c1297fc0e55dc268b468"}

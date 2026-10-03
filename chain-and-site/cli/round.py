@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build, canonicalize and hash a `voirdire/2` round envelope.
+"""Build, canonicalize and hash a versioned Voirdire round envelope.
 
 The canonical form here MUST be byte-identical to `_canonical` in
 contracts/voirdire.py. If the two ever drift, every reveal fails with
@@ -64,6 +64,8 @@ def canonical(env: dict) -> str:
         "nonce": str(env.get("nonce", "")),
         "transcripts": items,
     }
+    if env.get("version") == "voirdire/3":
+        core["profile_hash"] = str(env.get("profile_hash", ""))
     endpoint = str(env.get("endpoint", ""))
     if endpoint:
         core["endpoint"] = endpoint
@@ -74,6 +76,8 @@ def canonical_evidence(env: dict) -> str:
     core = json.loads(canonical(env))
     for item, original in zip(core["transcripts"], env.get("transcripts") or []):
         item["got"] = str(original.get("got", ""))
+        if env.get("version") == "voirdire/3":
+            item["finish_reason"] = str(original.get("finish_reason", ""))
         observed = str(original.get("observed_at", ""))
         if observed:
             item["observed_at"] = observed
@@ -114,8 +118,8 @@ def validate(env: dict, corpus: dict | None = None, plan: bool = False) -> list[
     reverts on chain still burns the window."""
     problems: list[str] = []
 
-    if env.get("version") != VERSION:
-        problems.append("version must be exactly %s" % VERSION)
+    if env.get("version") not in (VERSION, "voirdire/3"):
+        problems.append("version must be voirdire/2 or voirdire/3")
     if not isinstance(env.get("claim_id"), int):
         problems.append("claim_id must be an integer")
 
@@ -170,6 +174,16 @@ def validate(env: dict, corpus: dict | None = None, plan: bool = False) -> list[
             "a round covering fewer than two classes can only ever return "
             "INCONCLUSIVE — add probes from another class"
         )
+    if env.get("version") == "voirdire/3":
+        raw=(ROOT/'calibration/candidates/int-v3/profile.json').read_bytes()
+        profile=json.loads(raw)
+        if env.get('profile_hash') != hashlib.sha256(raw).hexdigest():problems.append('profile_hash must match frozen v3 profile')
+        if len(ts)!=6 or {t.get('probe_id') for t in ts}!=set(profile['probe_ids']):problems.append('v3 requires the exact six frozen probes')
+        for t in ts:
+            pid=t.get('probe_id')
+            if t.get('probe_class')!=profile['probe_classes'].get(pid):problems.append('v3 probe class mismatch')
+            if hashlib.sha256(str(t.get('sent','')).encode()).hexdigest()!=profile['probe_prompt_sha256'].get(pid):problems.append('v3 prompt mismatch')
+            if not plan and t.get('finish_reason') not in profile['generation_policy']['accepted_finish_reasons']:problems.append('v3 finish_reason must be stop or length')
     return problems
 
 
@@ -205,6 +219,12 @@ def cmd_new(args: argparse.Namespace) -> int:
             ]
             wanted.extend(pool[: args.per_class])
 
+    profile=None
+    if getattr(args,'version',VERSION)=='voirdire/3':
+        raw=(ROOT/'calibration/candidates/int-v3/profile.json').read_bytes();profile=json.loads(raw)
+        wanted=profile['probe_ids']
+        if burned.intersection(wanted):
+            print('v3 profile already consumed; a new claim is required',file=sys.stderr);return 2
     transcripts = []
     for pid in wanted:
         if pid in burned:
@@ -225,7 +245,7 @@ def cmd_new(args: argparse.Namespace) -> int:
         )
 
     env = {
-        "version": VERSION,
+        "version": getattr(args,"version",VERSION),
         "claim_id": args.claim,
         "nonce": secrets.token_hex(16),
         "transcripts": transcripts,
@@ -233,6 +253,7 @@ def cmd_new(args: argparse.Namespace) -> int:
         "author_note": "",
         "expects": "",
     }
+    if profile is not None:env["profile_hash"]=hashlib.sha256(raw).hexdigest()
     json.dump(env, sys.stdout, indent=2, ensure_ascii=False)
     sys.stdout.write("\n")
     print(
@@ -282,6 +303,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--claim", type=int, required=True)
     p.add_argument("--probes", default="", help="comma separated probe ids")
     p.add_argument("--per-class", type=int, default=2)
+    p.add_argument("--version", choices=["voirdire/2","voirdire/3"], default=VERSION)
     p.add_argument("--burned", default="", help="json list of burned probe ids")
     p.set_defaults(fn=cmd_new)
 

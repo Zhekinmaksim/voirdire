@@ -6,7 +6,7 @@ import { digest, collectionMessage } from '../lib/evidence.mjs';
 import { createHandler as collectHandler } from '../api/collect.mjs';
 import attest from '../api/attest.mjs';
 
-const config = JSON.parse(readFileSync('public/deployment.json'));
+const config = JSON.parse(readFileSync(process.env.SMOKE_DEPLOYMENT_FILE || 'public/deployment.json'));
 const statePath = process.env.SMOKE_STATE_FILE || 'runs/smoke.json';
 const smokeLimitUsd = 0.98; // $0.02 of the original $1 reserve covers bounded storage verification.
 const state = existsSync(statePath) ? JSON.parse(readFileSync(statePath)) : { contractAddress: config.contractAddress, costs: [], transactions: [] };
@@ -34,16 +34,20 @@ try {
     if(state.transactions.some(t=>t.functionName==='register_claim'))throw new Error('Registration already submitted; recover its finalized claim instead');
     state.claimId=Number(await read('claim_count'));save();
     state.claimLabel=process.env.SMOKE_CLAIM_MODEL||'gpt-class';save();
-    await write('register_claim',['openrouter:openai/gpt-4o-mini',state.claimLabel,process.env.SMOKE_CLAIM_VERSION||'openai/gpt-4o-mini','2026-10-03','2026-10-10',1000000000000n,1000000000000n,1,config.collectorAddress],3000000000000n);
+    const supported=JSON.parse(readFileSync('chain-and-site/calibration/candidates/int-v3/profile.json')).supported_models;
+    const actualModel=process.env.SMOKE_ACTUAL_MODEL||'openai/gpt-4o-mini';
+    await write('register_claim',['openrouter:'+actualModel,state.claimLabel,process.env.SMOKE_CLAIM_VERSION||supported[state.claimLabel]||actualModel,'2026-10-03','2026-10-10',1000000000000n,1000000000000n,1,config.collectorAddress],3000000000000n);
   }else if(command==='commit'){
     if(state.transactions.some(t=>t.functionName==='commit'))throw new Error('Commitment already submitted');
     const claim=await read('get_claim',[state.claimId]);
     if(claim.vendor.toLowerCase()!==c.account.address.toLowerCase())throw new Error('Unexpected claim owner');
     const corpus=JSON.parse(readFileSync('public/corpus.json'));
     const spent=new Set((await read('burned_probes',[state.claimId])).probe_ids);
-    const probes=['tokenizer_artifact','refusal_shape','repeat_stability'].flatMap(name=>corpus.probes.filter(p=>p.status==='active'&&p.class===name&&!spent.has(p.probe_id)).slice(0,2));
-    if(probes.length!==6)throw new Error('Not enough unused probes for a complete independent round');
-    state.envelope={version:'voirdire/2',claim_id:state.claimId,endpoint:claim.agent_id,nonce:randomBytes(24).toString('hex'),transcripts:probes.map(p=>({probe_id:p.probe_id,probe_class:p.class,sent:p.carrier,got:''}))};
+    const v3=config.protocolVersion==='voirdire/3';
+    const profile=v3?JSON.parse(readFileSync('public/profile.json')):null;
+    const probes=v3?profile.probe_ids.map(id=>corpus.probes.find(p=>p.probe_id===id&&p.status==='active'&&!spent.has(id))):['tokenizer_artifact','refusal_shape','repeat_stability'].flatMap(name=>corpus.probes.filter(p=>p.status==='active'&&p.class===name&&!spent.has(p.probe_id)).slice(0,2));
+    if(probes.length!==6||probes.some(p=>!p))throw new Error('Not enough unused probes for a complete independent round');
+    state.envelope={version:config.protocolVersion||'voirdire/2',...(v3?{profile_hash:config.profileHash}:{}),claim_id:state.claimId,endpoint:claim.agent_id,nonce:randomBytes(24).toString('hex'),transcripts:probes.map(p=>({probe_id:p.probe_id,probe_class:p.class,sent:p.carrier,got:''}))};
     state.commitId=Number(await read('commitment_count'));save();
     await write('commit',[state.claimId,digest(state.envelope)],BigInt(claim.challenge_stake));
   }else if(command==='collect'){

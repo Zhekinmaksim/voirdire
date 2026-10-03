@@ -1,3 +1,5 @@
+> Historical proposal. Superseded for the current known-model scope by the preregistered integer v3 confirmation, published in commit 19df2e6 and completed with PASS. Unknown detection remains outside the validated scope.
+
 # Next validation protocol — proposed, not executed
 
 The completed study remains **UNDECIDABLE**, with no approved matrix. Its 13,230 responses and all 105 inspected holdout batches are now development material only. Three Llama batches were classified as Mistral; Llama's 95% upper false-accusation bound was 22.38%, above the unchanged 10% limit. See the [completed diagnostic report](../chain-and-site/calibration/README.md).

@@ -1,90 +1,104 @@
 # Release verification — 3 October 2026
 
-The site is deployed, but **model-identity adjudication is not production-ready**.
-This release uses Bradbury test GEN. It must not be represented as a validated
-identity oracle or a real-money deployment.
+The v3 statistical gate passed. Live economic verification is in progress.
+This release uses Bradbury test GEN and a trusted collector. It is not proof
+of model identity or a deployment for real-money stakes.
 
 - Application: https://voirdire-mu.vercel.app
 - Source: https://github.com/Zhekinmaksim/voirdire
-- Active contract: `0x57346Ba266425B31aFC21668CD2829E1dD576A37`
-- Exact source and deployment hashes: [deployment.json](public/deployment.json)
-- Calibration result: [UNDECIDABLE](chain-and-site/calibration/README.md)
+- Active v3 contract: `0xd02C9Ab7C00b10669a3dd04e6d99101bd8eEfE99`
+- Profile/manifest/source/deployment bindings: [deployment.json](public/deployment.json)
+- Fresh confirmation: [PASS within known scope](chain-and-site/calibration/confirmation-v3/README.md)
 
-## Verified operation
+## Empirical validation
 
-Real OpenRouter responses were collected by the local collector handler, then
-attested by the deployed Vercel collector. On-chain registration, commitment,
-attestation, evidence publication and an inconclusive judgement succeeded.
-The contract returned the challenge stake as withdrawal credit, and its withdrawal
-reached the challenger's wallet. This control
-used an unclassified declaration; it is not evidence of classification accuracy.
+The preregistered classifier and study were published in Git commit `19df2e6`
+before collecting fresh responses. All 1,800 requests completed without retries
+or unresolved bills. The fixed sample contains 100 six-response rounds per
+model/provider: GPT-4o-mini/OpenAI, Llama 3.3 70B/Groq, Mistral Small 3.2/Mistral EU.
+Correct/all counts are 93/100, 95/100 and 94/100. Other outcomes abstained, with
+zero observed wrong-family labels. Per-model correct/all lower95 bounds are
+86.250%, 88.825%, 87.523%; false-accusation upper95 is 3.699% for each.
+The fixed thresholds (75% and10%) and all profile parameters stayed unchanged.
 
-| Step, claim 1 / round 1 | Intelligent Contract transaction |
-|---|---|
-| Registration | `0xa5ca6c7f996132a333a1961ad6f2d006b0963d5f962780bb8d38294ea7e3764e` |
-| Commitment | `0x9f61c0db096c883e82496052751f1b89c1dceddd89d591ae89ba64e830f95fa6` |
-| Collector attestation | `0x4a0d5cddc91fd6df13c96757b5131d7eef97a8b487894263c4ae12396b7df18a` |
-| Evidence publication | `0xba7671f585c5fd8b306def258ddea64e458a4b64a20bcfe5563ca31e0103333f` |
-| Judgement | `0x93bc244214eb7d09f75cde9882fa755c702fd6f07aec45579c16813019941eb7` |
-| Withdrawal | `0xaa323ca294b921e130b2e84f6fc9871e5c9fcda81ff16b5f0f84013b97972e4f` |
+This validates the frozen six-probe classifier within those model/provider
+combinations and observation period. It does not certify unknown detection,
+model weights, different providers or future endpoint drift. Zero observed
+errors is not zero future risk. The original 13,230-response study remains
+UNDECIDABLE and is preserved separately. Fresh data, ledger, integrity hashes,
+gate source and original compressed comparison data are published for audit.
 
-At 13:48 UTC, withdrawal was **FINALIZED / FINISHED_WITH_RETURN**. The observed
-wallet balance increase was exactly **`1000000000000 wei`**, matching the emitted
-transfer and saved withdrawal credit. The comparison used the balance after
-submission fees at block `0x1655060` and the final balance at `0x16555c5`; no
-intervening writes were sent from the recipient wallet. The verification command
-exited 0. Native payout is therefore verified, not merely accepted for execution.
+## Verified deployment and hosted collection
 
-The durable collector journal recovered the existing attestation after an
-interrupted response, returning the same transaction without consuming another
-signer nonce. Journal writes use private Blob storage, OIDC and conditional
-object versions. Signed transactions are persisted before broadcast. Operations,
-storage size, sponsored nonce range and transaction fees are bounded. See the
-[operator runbook](lib/COLLECTOR_OPERATIONS.md).
+The final contract deployed with AGREE / FINISHED_WITH_RETURN. `protocol_info`
+returns version3, APPROVED, the exact profile hash and calibration manifest hash.
+The site verifies the public profile bytes against the on-chain hash before
+allowing v3 writes. The collector pins providers, versions, prices, temperature,
+token limit and termination policy. Inconsistent routing fails closed.
 
-## Remaining release blockers
+The authorized hosted v3 collection returned six real responses and a proof via
+the deployed Vercel endpoint. The browser exercised registration, private plan
+backup, commitment, recovery, live hosted collection, evidence backup and
+attestation. Its wallet adapter kept the signing key in a local Node process and
+allowed only reviewed functions, micro-GEN deposits and bounded fees. The
+OpenRouter key was injected in the authorized outbound server request only;
+no key entered page state, browser storage, backups or logs. API responses were
+real forwarded production responses, not fabricated fixtures.
 
-1. **Calibration failed its unchanged evidence gate.** The completed battery has
-   13,230 real responses and 105 held-out observations, with no raw response
-   overlap between training and evaluation. Accuracy is 102/105, but Llama's
-   upper 95% false-accusation bound is 22.38%, exceeding the 10% limit. No approved
-   classifier or matrix is published. More calls are not automatically authorized
-   as a way to search for a passing result. The [next validation proposal](docs/NEXT_VALIDATION.md)
-   specifies the work needed before a new confirmation study; it has not started.
-2. **The on-chain judge is a separate, unvalidated decision process.** It does not
-   consume the statistical classifier. Real trials have reached disagreement or
-   no majority; published evidence then remains pending until recovery. One
-   successful inconclusive judgement does not validate decisive identity findings.
-3. **Hosted collection and the full wallet UI flow remain unverified.** Real paid
-   collection was tested locally, hosted attestation on Vercel, and chain writes
-   through the CLI. Browser checks covered the deployed interface and reads.
-   Testing a real provider key through hosted `/api/collect` remains pending
-   separate authorization for that key transit.
+The durable production collector uses Sensitive environment configuration,
+private Blob storage, OIDC, conditional versions and an exclusive signer journal.
+Signed transactions are persisted before broadcast; retries recover existing
+transactions instead of collecting again or blindly consuming a new nonce.
+The signer retains an absolute nonce ceiling of21 and fee limit0.01 test GEN.
+The primary wallet key remains local. Custom domain `voirdire.pro` is managed by
+the owner. See [operations](lib/COLLECTOR_OPERATIONS.md).
 
-The dedicated collector key is configured as a Sensitive variable, for production
-only, with the owner's authorization. Its type and scope were checked through
-Vercel's environment metadata without exposing its value. The primary wallet key
-remains local. No shared OpenRouter key is
-deployed. Custom domain `voirdire.pro` is managed by the owner.
+## Live economic controls — native finalization pending
 
-Conservative model-call debit, including discarded runs and fully reserved
-uncertain attempts, is **$2.600286160**: $2.596589260 for the battery and
-$0.003696900 for 36 application smoke calls. A separate $0.01 reserve covers the
-bounded storage verification, giving **$2.610286160 including that reserve**
-against the owner's $9.50 limit. The storage reserve is not an observed invoice.
+Three separately collected controls passed their expected paths:
 
-## Validation and prior trials
+- Declared Llama, actual GPT: INCONSISTENT, B1/B2 ADMISSIBLE; full pool and stake
+  credited (4e12wei), pool0 and balanced obligations.
+- Truthful GPT outside the radius: INCONCLUSIVE, stake1e12wei returned, zero
+  confirmed rounds. Its bond remains subject to the original validity window.
+- Separate truthful GPT within the radius: CONSISTENT, stake1e12wei returned,
+  one confirmed round; vendor closure returned the3e12wei bond.
 
-The current implementation passed 143 contract checks against both the source
-and exact-source deployment wrapper, 35 Python analysis checks and 69 JavaScript
-checks. The Vercel build and GitHub CI passed. These checks do not replace live
-consensus or empirical model validation.
+The browser submitted the combined9e12wei withdrawal. Its Intelligent Contract
+transaction was ACCEPTED / AGREE / FINISHED_WITH_RETURN; actual native arrival
+must still be verified after Bradbury's finalization window. Public transaction
+IDs and the exact credit breakdown are in
+[release-verification.json](public/release-verification.json). Every operational
+abstention remains recorded separately from the fixed scientific confirmation.
 
-An earlier contract, `0x28f7Ff5937Bf9Da8c17F1203B9d881DB608D6808`, constructed
-an Address from an Address during withdrawal and reverted. The active deployment
-fixes that type error. Its predecessor's remaining credit was not recovered;
-deploying corrected code does not modify an immutable predecessor.
+Native payout was independently verified on the preceding v2 release: transaction
+`0xaa323ca294b921e130b2e84f6fc9871e5c9fcda81ff16b5f0f84013b97972e4f`
+was FINALIZED / FINISHED_WITH_RETURN and increased the recipient wallet by exactly
+1e12wei after submission fees. This historical verification is not substituted
+for the new v3 economic controls.
 
-Other failed network trials and their receipts remain in the local run journals.
-They must not be omitted from claims about judge reliability. The original film
-contains synthetic historical figures and is excluded from the deployed product.
+## Implementation checks and failed trials
+
+143 archived v2 checks, 30 v3 checks and45 analysis checks pass. All89 JavaScript
+checks pass, and the production Vercel build succeeds. The fixture gate still
+must return UNDECIDABLE/exit2. Live consensus and actual fund arrival are checked
+separately from these offline results.
+
+Two v3 deployment submissions were rejected before execution for excessive gas.
+Lossless bz2/base85 packaging and removal of comment prose brought the reviewed
+source within the RPC limit; the executable AST and frozen classifier/profile
+literals stayed unchanged. Published source preserves the exact deployed bytes,
+including residual whitespace; cosmetic edits require a new deployment. A subsequent deployed trial exposed GenVM's inability
+to serialize float1.0 from a view. Only the returned generation-policy temperature
+was made integer1, with a no-float calldata regression check. The final v3 address
+above supersedes that immutable trial at `0x783F194EA2BC28705B3909De5935700F4b7b4d8E`.
+Its microscopic test bond remains in the old contract until protocol recovery.
+
+Historical v2 judge disagreements and earlier withdrawal failures remain in
+local journals. New deployment does not modify old contracts or move deposits.
+The old v2 deployment config is preserved for recovery. The original film has
+synthetic historical scores and is excluded from the product deployment.
+
+Current model-call debit is $2.85945606,
+including discarded attempts and both hosted trials. A separate $0.02 storage
+reserve is not an observed invoice. Both are within the owner's $9.50 limit.

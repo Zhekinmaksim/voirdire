@@ -1,0 +1,12 @@
+{
+  "chainId": 4221,
+  "network": "GenLayer Bradbury Testnet",
+  "rpcUrl": "https://rpc-bradbury.genlayer.com",
+  "explorerUrl": "https://explorer-bradbury.genlayer.com",
+  "contractAddress": "0x57346Ba266425B31aFC21668CD2829E1dD576A37",
+  "collectorAddress": "0x5d5348EfF6f626c6f1C6C78a0785aF44efAda0e0",
+  "protocolVersion": "voirdire/2",
+  "deploymentTransaction": "0x8ea4f5fe21f41880819e74b68fc5b471eff9bf3984a56743a981ba8decad1152",
+  "sourceSha256": "d28cc779a3e15a3b674ed839bb2af05ba32ce54f4e964bcaf99389b4f33083a9",
+  "deploymentSha256": "34ceccd7b80479c41cb5c5888db5e73d0c0db9dbbeb56d09c66c18fba09e3d10"
+}

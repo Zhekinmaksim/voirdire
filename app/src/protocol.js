@@ -48,10 +48,12 @@ export function requireEnvelopeProtocol(envelope, protocol) {
   return envelope;
 }
 
-export function profileRegistration(protocol, family) {
+export function profileRegistration(protocol, family, targetFamily = family) {
   const model = protocol?.supported_models?.[family];
   if (protocol?.version !== 'voirdire/3' || !['gpt-class','llama-class','mistral-class'].includes(family) || typeof model !== 'string' || !model.includes('/')) throw new Error('Select an approved profile endpoint.');
-  return {agent:`openrouter:${model}`, model:family, version:model, rounds:1};
+  const target = protocol.supported_models[targetFamily];
+  if (!['gpt-class','llama-class','mistral-class'].includes(targetFamily) || typeof target !== 'string' || !target.includes('/')) throw new Error('Select an approved collection target.');
+  return {agent:`openrouter:${target}`, model:family, version:model, rounds:1};
 }
 export function frozenProfileProbes(protocol, corpus, burned = []) {
   const ids=protocol?.probe_ids;

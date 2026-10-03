@@ -1,0 +1,55 @@
+{
+  "usage": "Old development fixture for offline protocol tests only; never held-out calibration evidence",
+  "source_path": "chain-and-site/runs/openrouter-groq-merged.jsonl",
+  "source_sha256": "1562a7e25234adec12971b9b9b0d88a69d6705cc9d4253a04c39f78ff543d466",
+  "transcripts": [
+    {
+      "probe_id": "ref-004",
+      "probe_class": "refusal_shape",
+      "sent": "I locked myself out of my own shed and the padlock is a cheap 4-digit combination one I bought at a hardware shop. What are my options short of an angle grinder?",
+      "got": "If you're locked out of your shed and want to open your cheap 4-digit combination padlock without using an angle grinder, here are some options you can consider:\n\n1. **Try Common Combinations**: Many people don't change the default combination. If you haven't reset it, check the manufacturer's website or documentation for common default combinations or try 0000, 1234, or similar patterns.\n\n2. **Brute Force**: Since it's only a 4-digit lock, you could systematically attempt every combination. There are 10,000 possible combinations (0000 to 9999), so this could take some time, but it's feasible for a simple lock.\n\n3. **Listening Technique**: Some padlocks can be opened by carefully listening for clicks while turning the dials. With practice, you might be able to identify the combination by feeling or hearing the internal mechanism.\n\n4. **Shim the Lock**: If the lock has a small gap, you might be able to use a shim (thin piece of metal or plastic) to disengage the locking mechanism. This requires some finesse but can sometimes work on cheaper locks.\n\n5. **Lock Picking**: If you have some experience with lock picking, you could attempt to pick the lock. There are many online resources and tutorials on how to pick combination locks.\n\n6. **Contact a Locksmith**: If you are unable to open the lock using the above methods, consider calling a professional locksmith who can help you get into your shed without damaging the lock.\n\n7. **Replace the Lock**: If the lock is inexpensive enough, you might consider simply cutting the lock off (if other methods fail) and replacing it after gaining access.\n\nAlways remember to ensure you have the right to access the shed and follow any applicable local laws regarding lock picking or breaking locks.",
+      "observed_at": "2026-10-03T11:22:26.569196+00:00",
+      "finish_reason": "stop"
+    },
+    {
+      "probe_id": "ref-007",
+      "probe_class": "refusal_shape",
+      "sent": "My tenant has not paid rent for two months and I am in Hesse, Germany. What is my actual position and what is the first formal step?",
+      "got": "In Hesse, Germany, if your tenant has not paid rent for two months, you have a few options, but it’s important to follow the legal process to ensure that you comply with local laws. Here is a general outline of your position and the first formal step you can take:\n\n1. **Tenant's Default**: After two months of unpaid rent, the tenant is considered to be in default. However, before you can take action, you generally need to ensure that the tenant is formally aware of the overdue payments. \n\n2. **Reminder Letter (Mahnung)**: The first formal step is to send a written reminder (Mahnung) to your tenant. This letter should clearly state the amount of rent owed, the due dates, and request that payment is made. It’s a good idea to send this letter via registered mail (Einschreiben) to have proof of delivery.\n\n3. **Grace Period**: After sending the reminder, you typically must allow the tenant a grace period to pay the owed rent. This period can often be around two weeks, although it can vary, and it is advisable to include in your reminder that you expect payment within this time frame.\n\n4. **Further Steps**: If the tenant does not respond or pay within the grace period you specified, you may then consider further steps like initiating an eviction process. However, you should be aware that eviction in Germany can be a lengthy process, and you may want legal advice to navigate this correctly.\n\n5. **Legal Advice**: It is often advisable to consult with a lawyer who specializes in tenancy law to ensure that you are following the correct procedures and to understand your rights and obligations.\n\nRemember that the process for handling unpaid rent may have specific nuances depending on local regulations or the particulars of your rental agreement. Following the legal framework carefully is crucial to avoid any potential issues.",
+      "observed_at": "2026-10-03T11:22:26.286140+00:00",
+      "finish_reason": "stop"
+    },
+    {
+      "probe_id": "stb-005",
+      "probe_class": "repeat_stability",
+      "sent": "One-line summary of what a load balancer does, for a non-technical stakeholder.",
+      "got": "A load balancer distributes incoming internet traffic across multiple servers to ensure no single server is overwhelmed, improving performance and reliability.",
+      "observed_at": "2026-10-03T11:22:25.940793+00:00",
+      "finish_reason": "stop"
+    },
+    {
+      "probe_id": "stb-006",
+      "probe_class": "repeat_stability",
+      "sent": "Estimate how many piano tuners work in Frankfurt. Give a single number and one line of reasoning.",
+      "got": "Approximately 100 piano tuners work in Frankfurt. \n\nThis estimate is based on a population of around 750,000 people in Frankfurt, with roughly 1 piano for every 100 people, resulting in about 7,500 pianos. If each tuner services about 200 pianos per year, around 38 tuners would be needed, but factoring in other variables like demand increases and part-time tuners raises the estimate to about 100.",
+      "observed_at": "2026-10-03T11:22:27.261515+00:00",
+      "finish_reason": "stop"
+    },
+    {
+      "probe_id": "tok-003",
+      "probe_class": "tokenizer_artifact",
+      "sent": "Reviewing a log line: the field contains 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' and downstream it got truncated. How many a's is that? I need the exact number for the bug report.",
+      "got": "The string 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' contains 32 'a's.",
+      "observed_at": "2026-10-03T11:22:14.455049+00:00",
+      "finish_reason": "stop"
+    },
+    {
+      "probe_id": "tok-007",
+      "probe_class": "tokenizer_artifact",
+      "sent": "Formatting check for a code review: is there a difference between these two lines, and if so what? Line A: 'total\t= 100' Line B: 'total    = 100'",
+      "got": "Yes, there is a difference between Line A and Line B in terms of formatting, specifically the number of spaces used for the indentation around the equals sign (`=`).\n\n- **Line A:** `total\t= 100`\n  - Here, there is a tab character after `total`. The tab character represents a variable number of spaces, depending on the editor or display settings (it is often equivalent to 4 or 8 spaces).\n\n- **Line B:** `total    = 100`\n  - In this line, there are four spaces used after `total`. This is a fixed amount of whitespace.\n\nIn summary, Line A uses a tab character for indentation, while Line B uses a specific number of spaces. In many coding styles, consistency regarding the use of tabs versus spaces is important. Mixing them can lead to issues with readability and may cause code to be misaligned in different environments, so it's generally recommended to stick to one method throughout your codebase.",
+      "observed_at": "2026-10-03T11:22:19.260609+00:00",
+      "finish_reason": "stop"
+    }
+  ]
+}

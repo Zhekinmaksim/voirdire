@@ -3,10 +3,12 @@
   "network": "GenLayer Bradbury Testnet",
   "rpcUrl": "https://rpc-bradbury.genlayer.com",
   "explorerUrl": "https://explorer-bradbury.genlayer.com",
-  "contractAddress": "0x57346Ba266425B31aFC21668CD2829E1dD576A37",
+  "contractAddress": "0xd02C9Ab7C00b10669a3dd04e6d99101bd8eEfE99",
   "collectorAddress": "0x5d5348EfF6f626c6f1C6C78a0785aF44efAda0e0",
-  "protocolVersion": "voirdire/2",
-  "deploymentTransaction": "0x8ea4f5fe21f41880819e74b68fc5b471eff9bf3984a56743a981ba8decad1152",
-  "sourceSha256": "d28cc779a3e15a3b674ed839bb2af05ba32ce54f4e964bcaf99389b4f33083a9",
-  "deploymentSha256": "34ceccd7b80479c41cb5c5888db5e73d0c0db9dbbeb56d09c66c18fba09e3d10"
+  "protocolVersion": "voirdire/3",
+  "deploymentTransaction": "0x2e2049afe973b72a35b8bb690c7bc8716c249d76bef5a239499af77c64ed1904",
+  "sourceSha256": "55c8fde8166bf1b956a5b09cc648096591d3f99213f116b34791b42c203af8e1",
+  "deploymentSha256": "1ff511ad25e929a6682cf2d09663f6d1ac87a07730ef100a1c14b832e81b5d4e",
+  "profileHash": "023fabdd55527c3637be1ba0886c60a4ce586527763558b7094f13f34d4e2a71",
+  "calibrationManifestHash": "8bdb0276cd9415e29af630a62297a42c60eec2423cc101793beb770c462ca72b"
 }

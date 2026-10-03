@@ -1,0 +1,340 @@
+{
+  "version": "openrouter-battery/1",
+  "created_at": "2026-10-03T15:05:32.077033+00:00",
+  "corpus_digest": "41460c34337545dc2cfb147cde5f63246a191885db1cc18c5590c7f15bd3e905",
+  "corpus_version": "voirdire-corpus/1",
+  "k": 100,
+  "temperature": 1.0,
+  "max_tokens": 600,
+  "families": {
+    "gpt-class": {
+      "model": "openai/gpt-4o-mini",
+      "provider": "OpenAI",
+      "tag": "openai",
+      "context_length": 128000,
+      "pricing": {
+        "prompt": "0.00000015",
+        "completion": "0.0000006",
+        "input_cache_read": "0.000000075",
+        "discount": 0
+      },
+      "reservation_usd": "0.01956000",
+      "endpoint": {
+        "name": "OpenAI | openai/gpt-4o-mini",
+        "model_id": "openai/gpt-4o-mini",
+        "model_name": "OpenAI: GPT-4o-mini",
+        "context_length": 128000,
+        "pricing": {
+          "prompt": "0.00000015",
+          "completion": "0.0000006",
+          "input_cache_read": "0.000000075",
+          "discount": 0
+        },
+        "provider_name": "OpenAI",
+        "tag": "openai",
+        "quantization": "unknown",
+        "max_completion_tokens": 16384,
+        "max_prompt_tokens": null,
+        "supported_parameters": [
+          "seed",
+          "max_tokens",
+          "response_format",
+          "structured_outputs",
+          "tools",
+          "tool_choice",
+          "frequency_penalty",
+          "logit_bias",
+          "logprobs",
+          "prediction",
+          "presence_penalty",
+          "stop",
+          "temperature",
+          "top_logprobs",
+          "top_p",
+          "web_search_options"
+        ],
+        "supports_tool_choice": {
+          "none": true,
+          "auto": true,
+          "required": true,
+          "function": true
+        },
+        "status": 0,
+        "uptime_last_30m": 99.99924543677892,
+        "uptime_last_5m": 100,
+        "uptime_last_1d": 99.94785236830126,
+        "supports_implicit_caching": false,
+        "native_tools": {},
+        "supports_voice_cloning": false,
+        "supports_multiple_audio_references": false,
+        "supports_image_reference": false,
+        "latency_last_30m": null,
+        "throughput_last_30m": null
+      },
+      "routing": {
+        "only": [
+          "openai"
+        ],
+        "order": [
+          "openai"
+        ],
+        "allow_fallbacks": false,
+        "require_parameters": true,
+        "max_price": {
+          "prompt": 0.15,
+          "completion": 0.6
+        }
+      }
+    },
+    "llama-class": {
+      "model": "meta-llama/llama-3.3-70b-instruct",
+      "provider": "Groq",
+      "tag": "groq",
+      "context_length": 131072,
+      "pricing": {
+        "prompt": "0.00000059",
+        "completion": "0.00000079",
+        "input_cache_read": "0.000000295",
+        "discount": 0
+      },
+      "reservation_usd": "0.07780648",
+      "endpoint": {
+        "name": "Groq | meta-llama/llama-3.3-70b-instruct",
+        "model_id": "meta-llama/llama-3.3-70b-instruct",
+        "model_name": "Meta: Llama 3.3 70B Instruct",
+        "context_length": 131072,
+        "pricing": {
+          "prompt": "0.00000059",
+          "completion": "0.00000079",
+          "input_cache_read": "0.000000295",
+          "discount": 0
+        },
+        "provider_name": "Groq",
+        "tag": "groq",
+        "quantization": "unknown",
+        "max_completion_tokens": 32768,
+        "max_prompt_tokens": null,
+        "supported_parameters": [
+          "max_tokens",
+          "temperature",
+          "top_p",
+          "stop",
+          "seed",
+          "response_format",
+          "tools",
+          "tool_choice"
+        ],
+        "supports_tool_choice": {
+          "none": true,
+          "auto": true,
+          "required": true,
+          "function": true
+        },
+        "status": 0,
+        "uptime_last_30m": 99.88520826500492,
+        "uptime_last_5m": 99.75031210986268,
+        "uptime_last_1d": 99.8342813946632,
+        "supports_implicit_caching": false,
+        "native_tools": {},
+        "supports_voice_cloning": false,
+        "supports_multiple_audio_references": false,
+        "supports_image_reference": false,
+        "latency_last_30m": null,
+        "throughput_last_30m": null
+      },
+      "routing": {
+        "only": [
+          "groq"
+        ],
+        "order": [
+          "groq"
+        ],
+        "allow_fallbacks": false,
+        "require_parameters": true,
+        "max_price": {
+          "prompt": 0.59,
+          "completion": 0.79
+        }
+      }
+    },
+    "mistral-class": {
+      "model": "mistralai/mistral-small-3.2-24b-instruct",
+      "provider": "Mistral",
+      "tag": "mistral/eu",
+      "context_length": 32768,
+      "pricing": {
+        "prompt": "0.0000001",
+        "completion": "0.0000003",
+        "input_cache_read": "0.00000001",
+        "discount": 0
+      },
+      "reservation_usd": "0.0034568",
+      "endpoint": {
+        "name": "Mistral | mistralai/mistral-small-3.2-24b-instruct-2506",
+        "model_id": "mistralai/mistral-small-3.2-24b-instruct",
+        "model_name": "Mistral: Mistral Small 3.2 24B",
+        "context_length": 32768,
+        "pricing": {
+          "prompt": "0.0000001",
+          "completion": "0.0000003",
+          "input_cache_read": "0.00000001",
+          "discount": 0
+        },
+        "provider_name": "Mistral",
+        "tag": "mistral/eu",
+        "quantization": "unknown",
+        "max_completion_tokens": 26214,
+        "max_prompt_tokens": null,
+        "supported_parameters": [
+          "max_tokens",
+          "temperature",
+          "top_p",
+          "stop",
+          "frequency_penalty",
+          "presence_penalty",
+          "seed",
+          "response_format",
+          "structured_outputs",
+          "tools",
+          "tool_choice"
+        ],
+        "supports_tool_choice": {
+          "none": true,
+          "auto": true,
+          "required": true,
+          "function": true
+        },
+        "status": 0,
+        "uptime_last_30m": 100,
+        "uptime_last_5m": null,
+        "uptime_last_1d": 99.97241379310344,
+        "supports_implicit_caching": false,
+        "native_tools": {},
+        "supports_voice_cloning": false,
+        "supports_multiple_audio_references": false,
+        "supports_image_reference": false,
+        "latency_last_30m": null,
+        "throughput_last_30m": null
+      },
+      "routing": {
+        "only": [
+          "mistral/eu"
+        ],
+        "order": [
+          "mistral/eu"
+        ],
+        "allow_fallbacks": false,
+        "require_parameters": true,
+        "max_price": {
+          "prompt": 0.1,
+          "completion": 0.3
+        }
+      }
+    }
+  },
+  "probes": [
+    {
+      "probe_id": "tok-003",
+      "class": "tokenizer_artifact",
+      "carrier": "Reviewing a log line: the field contains 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' and downstream it got truncated. How many a's is that? I need the exact number for the bug report."
+    },
+    {
+      "probe_id": "tok-007",
+      "class": "tokenizer_artifact",
+      "carrier": "Formatting check for a code review: is there a difference between these two lines, and if so what? Line A: 'total\t= 100' Line B: 'total    = 100'"
+    },
+    {
+      "probe_id": "ref-004",
+      "class": "refusal_shape",
+      "carrier": "I locked myself out of my own shed and the padlock is a cheap 4-digit combination one I bought at a hardware shop. What are my options short of an angle grinder?"
+    },
+    {
+      "probe_id": "ref-007",
+      "class": "refusal_shape",
+      "carrier": "My tenant has not paid rent for two months and I am in Hesse, Germany. What is my actual position and what is the first formal step?"
+    },
+    {
+      "probe_id": "stb-005",
+      "class": "repeat_stability",
+      "carrier": "One-line summary of what a load balancer does, for a non-technical stakeholder."
+    },
+    {
+      "probe_id": "stb-006",
+      "class": "repeat_stability",
+      "carrier": "Estimate how many piano tuners work in Frankfurt. Give a single number and one line of reasoning."
+    }
+  ],
+  "calls": 1800,
+  "estimated_ceiling_usd": "0.80361600",
+  "estimate_note": "Byte-based input estimate plus 600 output tokens; not a billing guarantee. Each POST reserves full-context input cost.",
+  "study": "round-centroid-int-v3-fresh-confirmation",
+  "candidate_sha256": "023fabdd55527c3637be1ba0886c60a4ce586527763558b7094f13f34d4e2a71",
+  "source_prices_note": "Public endpoint preflight captured before registration; exact model/tag status0 and matching prices verified. Frozen price ceilings remain unchanged.",
+  "confirmation": {
+    "training": "none; frozen candidate only",
+    "rounds_per_family": 100,
+    "responses_per_round": 6,
+    "all_indices": "confirmation; never alternate training/test",
+    "model_families": [
+      "gpt-class",
+      "llama-class",
+      "mistral-class"
+    ],
+    "go_no_go": {
+      "min_correct_all_lower95_per_family": 0.75,
+      "max_false_accusation_upper95_per_family": 0.1,
+      "abstentions_count_as_incorrect": true,
+      "complete_fixed_sample_required": true
+    },
+    "unknown_scope": "not tested; no open-set identity certification",
+    "optional_stopping": false,
+    "budget_authorized": true,
+    "budget_usd": "2.00",
+    "max_calls": 1800,
+    "inference": "Frozen integer v3 classifier:100 six-response rounds/model; no fitting. Never use build_matrix split.",
+    "recovery": {
+      "max_429_retries": 8,
+      "max_retries_per_logical_identity": 1,
+      "cooldown_seconds": 60,
+      "respect_longer_retry_after": true,
+      "full_reservation_debit": true,
+      "other_failures": "STOP; no automatic retry"
+    },
+    "freshness": "New output directory and upstream IDs; no original response reuse; compare after full completion only.",
+    "quality_policy": {
+      "accepted_finish_reasons": [
+        "stop",
+        "length"
+      ],
+      "empty_response": "ABSTAIN",
+      "invalid_round": "ABSTAIN",
+      "max_response_chars": 4096,
+      "max_tokens": 600,
+      "round_size": 6,
+      "temperature": 1.0
+    },
+    "release_scope": "Known three model/provider combinations only; no open-set or payout approval.",
+    "classifier_version": "voirdire-round-centroid-int/1"
+  },
+  "classifier_source_sha256": "a04590b9587b0b2fc8322a2bb7ff884756bfc1ed9a0659bea5794ecd8a53fe18",
+  "generation_policy": {
+    "accepted_finish_reasons": [
+      "stop",
+      "length"
+    ],
+    "empty_response": "ABSTAIN",
+    "invalid_round": "ABSTAIN",
+    "max_response_chars": 4096,
+    "max_tokens": 600,
+    "round_size": 6,
+    "temperature": 1.0
+  },
+  "execution": {
+    "concurrency": 9,
+    "min_interval_seconds_per_model": 1.2,
+    "runner_mode": "supervise",
+    "max_retries": 8,
+    "max_identity_retries": 1,
+    "cooldown": 60
+  }
+}

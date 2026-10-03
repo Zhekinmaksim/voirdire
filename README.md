@@ -8,14 +8,14 @@ Bradbury uses testnet GEN; this repository is not a real-money deployment.
 - Source: https://github.com/Zhekinmaksim/voirdire
 - Contract deployment configuration: `public/deployment.json`
 - Full contract source: `chain-and-site/contracts/voirdire.py`
-- Verified release boundaries and remaining blockers: [PRODUCTION_STATUS.md](PRODUCTION_STATUS.md)
+- Verified release boundaries: [PRODUCTION_STATUS.md](PRODUCTION_STATUS.md)
 
 ## Product flow
 
 1. Connect an EIP-1193 wallet on Bradbury (chain 4221).
 2. Register an `openrouter:provider/model-id` agent, its claimed model/version,
    validity dates, challenge stake, premium, bond and immutable collector address.
-3. Choose a claim. Prepare six unused corpus probes and download the private plan.
+3. Choose a claim. Prepare the six frozen v3 probes and download the private plan.
 4. Commit the SHA-256 plan digest with the required stake. Wait for finalization.
 5. Sign the collection request with the challenger wallet. Supply an OpenRouter
    key for this request; the collector sends it only to OpenRouter and does not
@@ -24,9 +24,10 @@ Bradbury uses testnet GEN; this repository is not a real-money deployment.
    Attestation can be retried from the saved bundle without buying new responses.
 7. After attestation finalizes, publish the exact evidence. This deterministic
    step records the responses and burns the probes without asking an LLM.
-8. Request judgement on the published round. GenLayer attempts an experimental
-   per-class judgement; it may fail to reach consensus. Confirm an admissible
-   divergent round, then withdraw credits.
+8. Request judgement on the published round. The deterministic integer classifier
+   compares the complete six-response round with the frozen profile. Matching
+   results return the stake; abstention remains inconclusive. Divergent results
+   require separate B1/B2 referee consensus before credits can be withdrawn.
    If validators do not agree, the evidence remains public and the round stays
    pending; it is not counted as an examination. The recovery timeout still
    releases its stake according to the protocol.
@@ -88,42 +89,50 @@ for recovery and renewal.
 
 Custom domain `voirdire.pro` is managed by the project owner.
 
-## Model calibration
+## Calibrated v3 scope
 
-The original matrix leaked raw responses across training and evaluation.
-It has been replaced by disjoint batches of three responses: even batches train,
-odd batches evaluate. Accuracy and false-accusation confidence bounds are gated.
-`k=30` gives only five held-out observations per family. Even with zero errors,
-`k=210` is the minimum for the present false-accusation threshold; this is not a
-promise that the corpus separates real models.
+A preregistered fresh confirmation completed 1,800 real responses: 100 independent
+six-response rounds for each pinned model/provider. The unchanged gate returned
+PASS. Correct/all was 93/100 for GPT-4o-mini (OpenAI), 95/100 for Llama 3.3 70B
+(Groq), and 94/100 for Mistral Small 3.2 (Mistral EU). Every other result abstained;
+there were no observed wrong-family labels. Per-model correct/all Wilson 95%
+lower bounds exceed 75%; wrong-label upper bounds are 3.699%, below 10%.
+Zero observed errors does not establish zero future risk.
 
-See `chain-and-site/README.md` for the budget-limited OpenRouter runner. Put
-`OPENROUTER_API_KEY` in a local `.env`, never in Git or browser build variables.
-Raw responses, costs, generation IDs, models and providers are retained in ignored
-run files. Merge explicitly with `merge_runs.py`; do not concatenate headers.
+The classifier was frozen and published in Git before collecting confirmation
+responses. It was not fitted on them. Exact prompts, features, provider routes,
+integer parameters and the capped-output policy are bound by the release manifest.
+See [confirmation data](chain-and-site/calibration/confirmation-v3/README.md),
+[gate](chain-and-site/calibration/confirmation-v3/gate.json) and
+[frozen release](chain-and-site/calibration/candidates/int-v3/manifest.json).
 
-A fixture must produce `UNDECIDABLE` and exit 2. The operational app publishes no
-synthetic model scores. `/research/` publishes the completed UNDECIDABLE run and
-its diagnostics. No approved classifier or matrix is available.
-Contract testimony and statistical calibration are
-separate: a working claim lifecycle does not establish classification accuracy.
+This release supports those three exact model/provider combinations only, one
+complete six-probe round per claim, temperature 1 and at most 600 output tokens.
+`stop` and `length` outputs are in scope; capped fragments remain partial.
+Unknown models, different providers, model weights and future endpoint drift have
+not been certified. Do not interpret a result as proof of identity.
 
-## Protocol v2 and recovery
+The original 13,230-response battery remains UNDECIDABLE; its Llama false-accusation
+confidence bound failed. It is preserved separately and has not been pooled with
+or relabelled by v3. Synthetic fixtures still must return UNDECIDABLE / exit 2.
+The historical v2 implementation and its 143 checks remain archived for recovery.
 
-- Commitment covers the probe plan and nonce, not future answers.
-- A 24-hour window uses deterministic transaction time, independent of traffic.
-- Collector signs the complete response envelope before reveal.
-- Evidence publication and subjective judgement are separate transactions.
-- Other challengers' locked stakes are refunded before a divergent claim pays.
-- No collector attestation: expiry releases the challenge stake.
-- Attested evidence withheld past expiry: the challenge stake is forfeited.
-- Unsettled rounds have a later recovery timeout.
-- Closing a claim cannot consume active obligations.
+## Protocol v3 and recovery
 
-See `chain-and-site/spec/round-envelope.md` for exact rules and canonical bytes.
-The initial 21 probes allow three complete six-probe rounds per claim. Exhaustion
-is reported explicitly; disclosed probes are never silently reused. Corpus growth
-requires new authored probes and fresh calibration, not renamed copies.
+- Commitment binds the frozen profile, exact probe plan and nonce before answers.
+- The 24-hour window uses deterministic transaction time, independent of traffic.
+- The immutable collector attests exact responses and termination metadata.
+- Publishing evidence spends the six probes; the same claim cannot reuse them.
+- Matching and abstaining rounds return stakes; only matching rounds count.
+- Divergence requires B1 and B2 consensus. A confirmed finding pays the entire
+  remaining pool after refunding other challengers' locked stakes.
+- Collector failure releases stake at expiry. Attested evidence withheld beyond
+  expiry forfeits stake, except when another publication consumed the fixed set.
+- Unsettled referee rounds release stake after their recovery timeout.
+- Closing cannot consume active obligations. Withdrawals pay on finalization.
+
+V2 recovery uses [the prior deployment](public/deployment-v2.json). Contracts and
+claims are immutable; changing the site address does not move old deposits.
 
 ## Film
 

@@ -1,0 +1,16 @@
+{
+  "observed_from": "2026-10-03T15:09:36.407046+00:00",
+  "observed_until": "2026-10-03T15:21:41.749644+00:00",
+  "preregistration_commit": "19df2e6",
+  "profile_hash": "023fabdd55527c3637be1ba0886c60a4ce586527763558b7094f13f34d4e2a71",
+  "manifest_hash": "8bdb0276cd9415e29af630a62297a42c60eec2423cc101793beb770c462ca72b",
+  "files_sha256": {
+    "mistral-class.jsonl": "022ee4aee34203efbfb4a264ae9fa21f88d9cada7d050e6006bd9f287b3b78e3",
+    "plan.json": "edf963df0df88ced6e62a2ce500f4b79cebd49c7f484d3d5d3b04577a1de4c32",
+    "llama-class.jsonl": "940437a2d8d00af950549df42d6cf15a5b8fe24dda76a9cadf15b383fc075925",
+    "gate.json": "dfabda6a0a35c4ae594ab506a1a2e8f29d5fa82578b10ad6a14c914068deed31",
+    "ledger.jsonl": "6b0a2bb1e6f36191609dfe694408028f7c9eb903df01dee0693e4a2f84f4293e",
+    "gpt-class.jsonl": "a994a888a3e9b569ee5664ab68a3f4349755f49daa644fd3e2db3cea4816d0a7",
+    "recovery.jsonl": "b3551d83780761cb2d94ae97c821f876a9b309f082821c9bcc6343dce09fcf46"
+  }
+}

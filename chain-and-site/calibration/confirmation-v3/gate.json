@@ -1,0 +1,75 @@
+{
+  "gate": "PASS",
+  "gate_exit_code": 0,
+  "scope": "Frozen known model/provider combinations only; unknown rejection not certified. Not on-chain payment approval.",
+  "responses": 1800,
+  "rounds": 300,
+  "confusion": {
+    "gpt-class": {
+      "gpt-class": 93,
+      "llama-class": 0,
+      "mistral-class": 0,
+      "ABSTAIN": 7
+    },
+    "llama-class": {
+      "gpt-class": 0,
+      "llama-class": 95,
+      "mistral-class": 0,
+      "ABSTAIN": 5
+    },
+    "mistral-class": {
+      "gpt-class": 0,
+      "llama-class": 0,
+      "mistral-class": 94,
+      "ABSTAIN": 6
+    }
+  },
+  "metrics": {
+    "gpt-class": {
+      "correct": 93,
+      "abstain": 7,
+      "false_accusations": 0,
+      "quality_abstentions": 0,
+      "correct_all_interval95": [
+        0.8625048526092651,
+        0.9656807389327273
+      ],
+      "false_accusation_interval95": [
+        3.469446951953614e-18,
+        0.03699349820698568
+      ]
+    },
+    "llama-class": {
+      "correct": 95,
+      "abstain": 5,
+      "false_accusations": 0,
+      "quality_abstentions": 0,
+      "correct_all_interval95": [
+        0.8882495307680808,
+        0.9784563208456319
+      ],
+      "false_accusation_interval95": [
+        3.469446951953614e-18,
+        0.03699349820698568
+      ]
+    },
+    "mistral-class": {
+      "correct": 94,
+      "abstain": 6,
+      "false_accusations": 0,
+      "quality_abstentions": 0,
+      "correct_all_interval95": [
+        0.8752318455410406,
+        0.9722138760368118
+      ],
+      "false_accusation_interval95": [
+        3.469446951953614e-18,
+        0.03699349820698568
+      ]
+    }
+  },
+  "reasons": [],
+  "conservative_debit_usd": "0.25668290",
+  "old_response_id_overlap": 0,
+  "manifest_sha256": "8bdb0276cd9415e29af630a62297a42c60eec2423cc101793beb770c462ca72b"
+}

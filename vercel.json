@@ -6,7 +6,7 @@
   "outputDirectory": "dist",
   "functions": {
     "api/*.mjs": {
-      "includeFiles": "{public/deployment.json,chain-and-site/corpus/probes.json}"
+      "includeFiles": "{public/deployment.json,public/profile.json,chain-and-site/corpus/probes.json,chain-and-site/calibration/candidates/int-v3/manifest.json,chain-and-site/calibration/candidates/int-v3/confirmation-plan.json}"
     }
   },
   "headers": [
