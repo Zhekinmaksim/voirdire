@@ -84,3 +84,28 @@ test('confirmation is only available for inconsistent findings admitted by first
  assert.equal(roundActions(round,{}).confirm,true);
  for(const change of [{stage_b1:'PENDING'},{stage_b1:'INADMISSIBLE'},{stage_b2:'ADMISSIBLE'},{verdict:'PENDING'},{verdict:'INCONCLUSIVE'},{settled:true}])assert.equal(roundActions({...round,...change},{}).confirm,false);
 });
+
+import {trackWalletProvider} from '../app/src/wallet.js';
+test('wallet EVM hash is recorded before SDK continuation; methods keep provider context',async()=>{
+ const events=[], hash='0x'+'b'.repeat(64);
+ const wallet={marker:7,request:async function(args){assert.equal(this.marker,7);events.push(args.method);return hash;},on:function(event,handler){assert.equal(this.marker,7);events.push(event);return handler;},removeListener:function(){assert.equal(this.marker,7);}};
+ const wrapped=trackWalletProvider(wallet,value=>events.push(`persist:${value}`));
+ assert.equal(await wrapped.request({method:'eth_sendTransaction',params:[]}),hash);events.push('SDK continues');
+ assert.deepEqual(events,['eth_sendTransaction',`persist:${hash}`,'SDK continues']);
+ assert.equal(wrapped.marker,7);const handler=()=>{};assert.equal(wrapped.on('accountsChanged',handler),handler);wrapped.removeListener();
+});
+test('wallet rejection and non-transaction responses never invent a submitted hash',async()=>{
+ const hashes=[];let response='0x'+'c'.repeat(64);
+ const wallet={async request(){if(response instanceof Error)throw response;return response;}};
+ const wrapped=trackWalletProvider(wallet,hash=>hashes.push(hash));
+ await wrapped.request({method:'eth_chainId'});
+ for(response of [null,undefined,'0x123',{},['0x'+'c'.repeat(64)]])await wrapped.request({method:'eth_sendTransaction'});
+ response=new Error('User rejected');await assert.rejects(wrapped.request({method:'eth_sendTransaction'}),/User rejected/);
+ assert.deepEqual(hashes,[]);
+});
+test('wallet wrapper works with immutable injected provider methods',async()=>{
+ const hash='0x'+'d'.repeat(64),seen=[];
+ const provider=Object.freeze({request:async()=>hash});
+ const wrapped=trackWalletProvider(provider,value=>seen.push(value));
+ assert.equal(await wrapped.request({method:'eth_sendTransaction'}),hash);assert.deepEqual(seen,[hash]);
+});
