@@ -55,3 +55,23 @@ export function roundActions(round, protocol) {
     recover: unsettled,
   };
 }
+
+export function attestationRecoveryState(txs, contract, commitment) {
+  const rows = txs.filter(t => t.kind === 'evm' && t.label?.startsWith('Collector attestation') &&
+    t.contract?.toLowerCase() === contract?.toLowerCase() && t.commitId === Number(commitment?.commit_id));
+  const unresolved = rows.some(t => !['EVM mined','EVM reverted'].includes(t.status));
+  return {blocked: unresolved && !commitment?.evidence_digest,
+    reconcile: !!commitment?.evidence_digest || rows.some(t => t.status === 'EVM mined')};
+}
+export function recordAttestationResult(txs, result, contract, commitId) {
+  if (!/^0x[\da-f]{64}$/i.test(result.transactionHash || '')) return txs;
+  const matches = t => t.contract?.toLowerCase() === contract.toLowerCase() && t.commitId === commitId && t.label?.startsWith('Collector attestation');
+  const prior = txs.find(t => matches(t) && t.kind === 'evm' && t.status !== 'EVM reverted');
+  const existing = txs.find(t => t.hash?.toLowerCase() === result.transactionHash.toLowerCase());
+  const row = existing || prior || {time:new Date().toISOString()};
+  const evmTransactionHash = prior?.hash || row.evmTransactionHash;
+  Object.assign(row,{kind:'ic',hash:result.transactionHash,contract,commitId,label:'Collector attestation',
+    ...(evmTransactionHash?{evmTransactionHash}:{}), error:''});
+  if (!existing) Object.assign(row,{status:'Submitted',detail:'Intelligent Contract ID recovered. Check its receipt; recovery does not mean final settlement.'});
+  return [...txs.filter(t => t !== row && t !== prior),row];
+}

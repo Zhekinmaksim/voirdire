@@ -127,3 +127,34 @@ test('registration round capacity uses two fresh probes per required class and f
  const probes=make(groups);probes[0].status='retired';probes.push(probes[1],{probe_id:'extra',class:'other',status:'active',carrier:'task'});
  assert.equal(corpusRoundCapacity(probes),3);
 });
+
+import {restoreEvidenceBundle} from '../app/src/protocol.js';
+import {attestationRecoveryState,recordAttestationResult} from '../app/src/lifecycle.js';
+test('hard reload retains evidence proof and requires a new download after collection',()=>{
+ const e=envelope(),proof=proofFor('secret','contract',3,e);
+ for(const downloaded of [false,true,undefined,'true']){
+  const restored=restoreEvidenceBundle(JSON.parse(JSON.stringify({envelope:e,proof,downloaded})));
+  assert.equal(restored.downloaded,downloaded===true);
+  assert.equal(proofFor('secret','contract',3,restored.envelope),restored.proof);
+ }
+ assert.equal(restoreEvidenceBundle({envelope:e,proof},{imported:true}).downloaded,true);
+ for(const broken of [null,{}, {envelope:{...e,transcripts:[null]}}, {envelope:e,proof:{bad:true}}])assert.throws(()=>restoreEvidenceBundle(broken));
+});
+test('successful EVM attestation can reconcile while unresolved submissions require a receipt check',()=>{
+ const base={kind:'evm',label:'Collector attestation · EVM submission',contract:'0xABC',commitId:3};
+ for(const status of ['EVM pending','EVM unknown'])assert.equal(attestationRecoveryState([{...base,status}],'0xabc',{commit_id:3}).blocked,true);
+ assert.deepEqual(attestationRecoveryState([{...base,status:'EVM mined'}],'0xabc',{commit_id:3}),{blocked:false,reconcile:true});
+ assert.equal(attestationRecoveryState([{...base,status:'EVM unknown'}],'0xabc',{commit_id:3,opened:true,evidence_digest:'attested'}).blocked,false);
+ assert.equal(attestationRecoveryState([{...base,status:'EVM unknown'}],'other',{commit_id:3}).blocked,false);
+ assert.equal(attestationRecoveryState([{...base,status:'EVM reverted'}],'0xabc',{commit_id:3}).blocked,false);
+});
+test('journal recovery links original EVM submission and recovered IC id without duplicate rows',()=>{
+ const evm='0x'+'1'.repeat(64),ic='0x'+'2'.repeat(64);
+ const row={kind:'evm',hash:evm,label:'Collector attestation · EVM submission',contract:'0xabc',commitId:3,status:'EVM mined',error:'uncertain'};
+ let txs=recordAttestationResult([row],{transactionHash:ic,recovered:true},'0xabc',3);
+ assert.equal(txs.length,1);assert.equal(txs[0].hash,ic);assert.equal(txs[0].evmTransactionHash,evm);assert.equal(txs[0].kind,'ic');assert.equal(txs[0].error,'');
+ txs[0].status='FINALIZED';
+ txs=recordAttestationResult(txs,{transactionHash:ic,recovered:true},'0xabc',3);
+ assert.equal(txs.length,1);assert.equal(txs[0].status,'FINALIZED');assert.equal(txs[0].evmTransactionHash,evm);
+ assert.deepEqual(recordAttestationResult(txs,{alreadyAttested:true},'0xabc',3),txs);
+});

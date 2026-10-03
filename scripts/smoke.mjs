@@ -8,7 +8,7 @@ import attest from '../api/attest.mjs';
 
 const config = JSON.parse(readFileSync('public/deployment.json'));
 const statePath = process.env.SMOKE_STATE_FILE || 'runs/smoke.json';
-const smokeLimitUsd = 0.99; // $0.01 of the original $1 reserve covers bounded storage verification.
+const smokeLimitUsd = 0.98; // $0.02 of the original $1 reserve covers bounded storage verification.
 const state = existsSync(statePath) ? JSON.parse(readFileSync(statePath)) : { contractAddress: config.contractAddress, costs: [], transactions: [] };
 if(state.contractAddress!==config.contractAddress)throw new Error('Smoke state belongs to a different contract; select its matching state file');
 const save = () => writeFileSync(statePath, json(state)+'\n', {mode:0o600});
@@ -40,8 +40,10 @@ try {
     const claim=await read('get_claim',[state.claimId]);
     if(claim.vendor.toLowerCase()!==c.account.address.toLowerCase())throw new Error('Unexpected claim owner');
     const corpus=JSON.parse(readFileSync('public/corpus.json'));
-    const ids=['tok-001','tok-002','ref-001','ref-002','stb-001','stb-002'];
-    state.envelope={version:'voirdire/2',claim_id:state.claimId,endpoint:claim.agent_id,nonce:randomBytes(24).toString('hex'),transcripts:ids.map(id=>{const p=corpus.probes.find(p=>p.probe_id===id);return{probe_id:id,probe_class:p.class,sent:p.carrier,got:''}})};
+    const spent=new Set((await read('burned_probes',[state.claimId])).probe_ids);
+    const probes=['tokenizer_artifact','refusal_shape','repeat_stability'].flatMap(name=>corpus.probes.filter(p=>p.status==='active'&&p.class===name&&!spent.has(p.probe_id)).slice(0,2));
+    if(probes.length!==6)throw new Error('Not enough unused probes for a complete independent round');
+    state.envelope={version:'voirdire/2',claim_id:state.claimId,endpoint:claim.agent_id,nonce:randomBytes(24).toString('hex'),transcripts:probes.map(p=>({probe_id:p.probe_id,probe_class:p.class,sent:p.carrier,got:''}))};
     state.commitId=Number(await read('commitment_count'));save();
     await write('commit',[state.claimId,digest(state.envelope)],BigInt(claim.challenge_stake));
   }else if(command==='collect'){
@@ -50,7 +52,7 @@ try {
     if(process.argv.includes('--remote')){
       if(state.envelope.endpoint!=='openrouter:openai/gpt-4o-mini')throw new Error('Unexpected billable model');
       const reserve=state.envelope.transcripts.length*0.05;
-      if(totalDebit()+reserve>smokeLimitUsd)throw new Error('Global USD0.99 smoke budget exhausted');
+      if(totalDebit()+reserve>smokeLimitUsd)throw new Error('Global USD0.98 smoke budget exhausted');
       const index=state.costs.length;state.costs.push({debit:reserve,status:'reserved-hosted'});save();
       const response=await fetch('https://voirdire-mu.vercel.app/api/collect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({commitId:state.commitId,envelope:state.envelope,signature,apiKey:envValue('.env','OPENROUTER_API_KEY'),priceLimits:{prompt:0.15,completion:0.6}})});
       const result=await response.json();if(!response.ok)throw new Error(result.error||'Hosted collection failed');
@@ -61,7 +63,7 @@ try {
     }
     const handler=collectHandler({fetch:async(url,options)=>{
       const used=totalDebit();
-      if(used+0.05>smokeLimitUsd)throw new Error('USD0.99 smoke budget exhausted');
+      if(used+0.05>smokeLimitUsd)throw new Error('USD0.98 smoke budget exhausted');
       const body=JSON.parse(options.body);
       if(body.model!=='openai/gpt-4o-mini'||body.max_tokens>600)throw new Error('Unexpected billable model');
       body.provider={...body.provider,max_price:{prompt:0.15,completion:0.6}};

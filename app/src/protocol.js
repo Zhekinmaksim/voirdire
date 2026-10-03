@@ -13,8 +13,8 @@ export async function digestPlan(env) {
 }
 export function newNonce() { return Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, '0')).join(''); }
 export function validateEnvelope(env) {
-  if (env.version !== 'voirdire/2' || !Number.isSafeInteger(env.claim_id) || env.claim_id < 0 || !/^[\da-f]{16,64}$/i.test(env.nonce) || !Array.isArray(env.transcripts) || !env.transcripts.length) throw new Error('This is not a valid Voirdire v2 envelope.');
-  for (const t of env.transcripts) if (![t.probe_id, t.probe_class, t.sent].every(v => typeof v === 'string' && v.length)) throw new Error('An envelope probe is incomplete.');
+  if (!env || typeof env !== 'object' || env.version !== 'voirdire/2' || !Number.isSafeInteger(env.claim_id) || env.claim_id < 0 || !/^[\da-f]{16,64}$/i.test(env.nonce) || !Array.isArray(env.transcripts) || !env.transcripts.length) throw new Error('This is not a valid Voirdire v2 envelope.');
+  for (const t of env.transcripts) if (!t || ![t.probe_id, t.probe_class, t.sent].every(v => typeof v === 'string' && v.length)) throw new Error('An envelope probe is incomplete.');
   return env;
 }
 
@@ -28,4 +28,13 @@ export function corpusRoundCapacity(probes) {
   }
   // A prepared round consumes two distinct probes in each of three classes.
   return Math.min(...classes.map(name=>Math.floor(counts[name]/2)));
+}
+
+// Read the complete saved bundle without rebuilding source metadata covered by HMAC.
+export function restoreEvidenceBundle(saved, {imported = false} = {}) {
+  if (!saved || typeof saved !== 'object') throw new Error('No saved evidence bundle.');
+  const envelope = validateEnvelope(saved.envelope || saved);
+  const proof = saved.proof ?? null;
+  if (proof !== null && (typeof proof !== 'string' || !proof.length)) throw new Error('Invalid collector proof in saved evidence.');
+  return {envelope, proof, downloaded: imported || saved.downloaded === true};
 }
