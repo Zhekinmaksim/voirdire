@@ -126,7 +126,7 @@ test('sponsorship caps fail closed and bound cross-instance replay expense',asyn
   let signed=0;
   const original={address:collector.address,signTransaction:async()=>{signed++;return '0xsigned'}};
   assert.throws(()=>boundedAccount(original,{}),/not configured/);
-  const guarded=boundedAccount(original,{maxNonce:'21',maxFeeWei:'10000000000000000'});
+  const guarded=boundedAccount(original,{maxNonce:'21\n',maxFeeWei:' 10000000000000000\n'});
   const request={nonce:20,gas:200000n,gasPrice:1000000000n,value:0n};
   assert.equal(await guarded.signTransaction(request),'0xsigned');
   for(const change of [{nonce:21},{nonce:-1},{gas:0n},{gasPrice:-1n},{value:1n},{gas:100000000n}]) {
