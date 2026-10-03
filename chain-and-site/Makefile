@@ -6,12 +6,13 @@ all: test fixture matrix page
 
 test:
 	$(PY) test/run_tests.py
+	$(PY) -m unittest discover -s test -p 'test_*.py'
 
 corpus:
 	$(PY) -c "import json,sys;d=json.load(open('corpus/probes.json'));print(len(d['probes']),'probes,',d['status'])"
 
-# Synthetic run. Proves the pipeline, measures nothing. k=30 is the point where
-# samples outnumber features and the battery stops being underdetermined.
+# Synthetic run. Proves the pipeline, measures nothing. k=30 yields five
+# independent held-out batches per family, insufficient for publication.
 fixture:
 	$(PY) scripts/run_battery.py --offline --k 30 --out runs/fixture.jsonl
 

@@ -1,28 +1,17 @@
 #!/usr/bin/env python3
-"""Turn battery runs into the confusion matrix.
+"""Build a fixed held-out evaluation from disjoint batches of raw responses.
 
-    build_matrix.py runs/fixture.jsonl --out web/matrix.json
-
-This is the number section 7 of the spec says the project is taken for, and the
-reason the honesty rules here are strict:
-
-- classification is leave-one-out. A signature is never compared against a
-  centroid it helped compute, because that reports memorisation as accuracy
-- pairs the battery cannot separate are named, not averaged away. A single
-  accuracy figure over four families hides exactly the fact a vendor would
-  dispute, which makes it marketing rather than measurement
-- `provenance.kind` rides through untouched. A matrix built from `--offline`
-  runs is stamped `fixture` and every consumer, including the page and the
-  gate, refuses to present it as measured
-
-No model is consulted anywhere in this file. Features are extracted by
-scripts/features.py and everything after that is arithmetic.
+Each batch contains three responses per probe. Even batches fit centroids;
+odd batches evaluate them. No raw response is reused across these partitions.
+The fixed feature extractor and split must be chosen before collecting results.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import itertools
+import math
 import json
 import pathlib
 import statistics
@@ -39,6 +28,10 @@ import features as F  # noqa: E402
 SEPARATION_FLOOR = 1.0
 
 
+BATCH_SIZE = 3
+METHOD = "disjoint-batches-heldout-v1"
+
+
 def load(path: pathlib.Path):
     header = None
     runs = []
@@ -47,37 +40,52 @@ def load(path: pathlib.Path):
             continue
         rec = json.loads(line)
         if rec.get("record") == "header":
+            if header is not None:
+                raise ValueError("multiple headers; use merge_runs.py")
             header = rec
         elif rec.get("record") == "run":
             runs.append(rec)
+        else:
+            raise ValueError("unknown record type")
     if header is None:
-        raise SystemExit("no header line: cannot establish provenance, refusing to score")
+        raise ValueError("missing provenance header")
     return header, runs
 
 
 def samples(runs):
-    """Leave-one-out subsets, so each (family, probe) yields several signatures
-    from k runs without any of them sharing a run with its own centroid."""
-    grouped: dict = {}
+    """Non-overlapping batches; missing/error responses invalidate the input."""
+    grouped = {}
+    seen = set()
     for r in runs:
-        if r.get("error"):
-            continue
+        key = (r["family"], r["probe_id"], r["run_index"])
+        if key in seen:
+            raise ValueError("duplicate response identity: %r" % (key,))
+        seen.add(key)
+        if r.get("error") or not isinstance(r.get("got"), str) or not r["got"].strip():
+            raise ValueError("failed or empty response: %r" % (key,))
+        if not isinstance(r["run_index"], int) or r["run_index"] < 0:
+            raise ValueError("invalid run index")
         grouped.setdefault((r["family"], r["probe_id"], r["probe_class"]), []).append(
-            (r["run_index"], r["got"])
-        )
-
-    out: dict = {}
-    for (family, probe_id, cls), items in grouped.items():
+            (r["run_index"], r["got"]))
+    out = {}
+    for key, items in grouped.items():
         items.sort()
+        if [i for i, _ in items] != list(range(len(items))):
+            raise ValueError("run indices must be contiguous from zero")
         texts = [t for _, t in items]
-        if len(texts) < 2:
-            continue
-        sigs = []
-        for i in range(len(texts)):
-            subset = texts[:i] + texts[i + 1:]
-            sigs.append(F.signature(cls, subset))
-        out[(family, probe_id, cls)] = sigs
+        out[key] = [F.signature(key[2], texts[i:i+BATCH_SIZE])
+                    for i in range(0, len(texts)-BATCH_SIZE+1, BATCH_SIZE)]
     return out
+
+
+def wilson(successes, total, z=1.959963984540054):
+    if not total:
+        return [0.0, 1.0]
+    p = successes / total
+    scale = 1 + z*z/total
+    center = (p + z*z/(2*total))/scale
+    radius = z * math.sqrt(p*(1-p)/total + z*z/(4*total*total))/scale
+    return [max(0.0, center-radius), min(1.0, center+radius)]
 
 
 def _centroid(vectors):
@@ -95,26 +103,16 @@ def _spread(vectors):
 
 
 def classify_probe(sigs_by_family):
-    """Leave-one-out nearest centroid, one probe at a time."""
-    families = sorted(sigs_by_family.keys())
+    """Fit on even batches and evaluate once on independent odd batches."""
+    families = sorted(sigs_by_family)
     confusion = {a: {b: 0 for b in families} for a in families}
+    centroids = {f: _centroid(sigs_by_family[f][::2]) for f in families}
+    if any(c is None for c in centroids.values()):
+        raise ValueError("no training batches")
     for truth in families:
-        for idx, sig in enumerate(sigs_by_family[truth]):
-            best = None
-            best_d = None
-            for cand in families:
-                pool = sigs_by_family[cand]
-                if cand == truth:
-                    pool = pool[:idx] + pool[idx + 1:]
-                c = _centroid(pool)
-                if c is None:
-                    continue
-                d = F.distance(sig, c)
-                if best_d is None or d < best_d:
-                    best_d = d
-                    best = cand
-            if best is not None:
-                confusion[truth][best] += 1
+        for sig in sigs_by_family[truth][1::2]:
+            best = min(families, key=lambda f: (F.distance(sig, centroids[f]), f))
+            confusion[truth][best] += 1
     return confusion, families
 
 
@@ -135,12 +133,41 @@ def accuracy(confusion, families):
 
 def build(path: pathlib.Path) -> dict:
     header, runs = load(path)
+    if header.get("provenance", {}).get("kind") not in {"live", "fixture"}:
+        raise ValueError("unknown provenance")
+    declared = header.get("families", [])
+    models = header.get("models", {})
+    if len(set(declared)) < 2 or len(set(declared)) != len(declared):
+        raise ValueError("at least two distinct families required")
+    for r in runs:
+        if r["family"] not in declared or r.get("model") != models.get(r["family"]):
+            raise ValueError("response family/model differs from header")
+    if header["provenance"]["kind"] == "live" and (
+        header["provenance"].get("provider") == "synthetic" or
+        any(str(model).startswith("synthetic:") for model in models.values())
+    ):
+        raise ValueError("synthetic sources cannot be labeled live")
+    probe_specs = {}
+    for r in runs:
+        spec = (r["probe_class"], r.get("sent"))
+        if r["probe_id"] in probe_specs and probe_specs[r["probe_id"]] != spec:
+            raise ValueError("probe class or prompt differs between observations")
+        probe_specs[r["probe_id"]] = spec
     sigs = samples(runs)
 
     families = sorted({f for (f, _, _) in sigs})
     probe_ids = sorted({p for (_, p, _) in sigs})
     class_of = {p: c for (_, p, c) in sigs}
 
+    if families != sorted(declared) or not probe_ids:
+        raise ValueError("missing declared families/probes")
+    for f in families:
+        for pid in probe_ids:
+            key = (f, pid, class_of[pid])
+            if key not in sigs or len(sigs[key]) < 2:
+                raise ValueError("incomplete family/probe coverage or fewer than six responses")
+    if len({(p,c) for (_,p,c) in sigs}) != len(probe_ids):
+        raise ValueError("inconsistent probe classes")
     per_probe = []
     blind_pairs: dict = {}
     for pid in probe_ids:
@@ -150,7 +177,7 @@ def build(path: pathlib.Path) -> dict:
         confusion, fams = classify_probe(by_family)
         pairs = []
         for a, b in itertools.combinations(fams, 2):
-            sep = pair_separation(by_family, a, b)
+            sep = pair_separation({f: vs[::2] for f, vs in by_family.items()}, a, b)
             verdict = "SEPARATES" if sep >= SEPARATION_FLOOR else "BLIND"
             pairs.append({"a": a, "b": b, "separation": round(sep, 3), "verdict": verdict})
             if verdict == "BLIND":
@@ -165,9 +192,8 @@ def build(path: pathlib.Path) -> dict:
             }
         )
 
-    # The battery: per fold index, concatenate every probe signature for a
-    # family into one long vector. This is the instrument as actually used — a
-    # verdict is never taken from one probe.
+    # Concatenate the same disjoint batch index across all probes.
+    # Truncate surplus complete batches consistently across probes per family.
     battery: dict = {}
     fold_counts = {
         f: min(
@@ -188,8 +214,10 @@ def build(path: pathlib.Path) -> dict:
             vectors.append(vec)
         battery[f] = vectors
 
-    width = min(len(v) for vs in battery.values() for v in vs)
-    battery = {f: [v[:width] for v in vs] for f, vs in battery.items()}
+    widths = {len(v) for vs in battery.values() for v in vs}
+    if len(widths) != 1:
+        raise ValueError("inconsistent feature widths")
+    width = widths.pop()
     bconf, bfams = classify_probe(battery)
     bacc = accuracy(bconf, bfams)
 
@@ -202,16 +230,16 @@ def build(path: pathlib.Path) -> dict:
         wrong = total - bconf[f][f]
         false_accusation[f] = round(wrong / total, 3) if total else 0.0
 
-    # Nearest-centroid over more features than samples will separate almost
-    # anything, including two families that are identical by construction. That
-    # is not a finding, it is dimensionality. The guard is stated on the record
-    # rather than quietly fixed, because the fix is more samples, not more code.
-    total_samples = sum(len(v) for v in battery.values())
-    underdetermined = width >= total_samples
+    total_samples = sum(sum(row.values()) for row in bconf.values())
+    training_samples = sum(len(v[::2]) for v in battery.values())
+    underdetermined = total_samples == 0
+    accuracy_interval = wilson(sum(bconf[f][f] for f in bfams), total_samples)
+    fa_intervals = {f: wilson(sum(bconf[f].values()) - bconf[f][f], sum(bconf[f].values()))
+                    for f in bfams}
 
     battery_pairs = []
     for a, b in itertools.combinations(bfams, 2):
-        sep = pair_separation(battery, a, b)
+        sep = pair_separation({f: vs[::2] for f, vs in battery.items()}, a, b)
         battery_pairs.append(
             {
                 "a": a,
@@ -223,14 +251,20 @@ def build(path: pathlib.Path) -> dict:
 
     kind = header["provenance"]["kind"]
     return {
+        "evaluation_method": METHOD,
         "corpus_version": header.get("corpus_version"),
         "corpus_digest": header.get("corpus_digest"),
         "provenance": header["provenance"],
         "source_file": path.name,
+        "source_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
         "families": families,
         "models": header.get("models", {}),
         "battery": {
-            "accuracy": round(bacc, 3),
+            "accuracy": bacc,
+            "accuracy_interval_95": accuracy_interval,
+            "false_accusation_interval_95": fa_intervals,
+            "batch_size": BATCH_SIZE,
+            "training_samples": training_samples,
             "confusion": bconf,
             "false_accusation_rate": false_accusation,
             "pairs": battery_pairs,
@@ -239,12 +273,9 @@ def build(path: pathlib.Path) -> dict:
             "samples": total_samples,
             "underdetermined": underdetermined,
             "reliability": (
-                "UNRELIABLE: %d features against %d samples. Nearest-centroid "
-                "separates anything under those conditions, so this accuracy is "
-                "not evidence. Raise k, or cut the battery to fewer probes."
-                % (width, total_samples)
-                if underdetermined
-                else "%d features against %d samples." % (width, total_samples)
+                "%d independent held-out batches; %d training batches; %d fixed features. "
+                "Intervals describe these models, prompts and settings only; no deployment generalization."
+                % (total_samples, training_samples, width)
             ),
         },
         "per_probe": per_probe,
@@ -285,7 +316,11 @@ def main(argv=None) -> int:
     ap.add_argument("--out", default=str(ROOT / "web" / "matrix.json"))
     args = ap.parse_args(argv)
 
-    m = build(pathlib.Path(args.runs))
+    try:
+        m = build(pathlib.Path(args.runs))
+    except (ValueError, KeyError, TypeError) as exc:
+        print("UNDECIDABLE: " + str(exc), file=sys.stderr)
+        return 2
     out = pathlib.Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(m, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

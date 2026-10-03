@@ -87,8 +87,21 @@ class _UserError(Exception):
     pass
 
 
+class _Return:
+    def __init__(self, calldata):
+        self.calldata = calldata
+
+
 class _Vm:
     UserError = _UserError
+    Return = _Return
+
+    @staticmethod
+    def run_nondet_unsafe(leader, validator):
+        result = leader()
+        if not validator(_Return(result)):
+            raise _UserError("independent validator disagreed")
+        return result
 
 
 class _Message:

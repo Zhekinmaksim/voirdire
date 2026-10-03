@@ -121,26 +121,47 @@ reliable as arithmetic:
 
 ## What the matrix found about itself
 
-`scripts/build_matrix.py` classifies leave-one-out and refuses to average blind
-pairs away. Running it against a fixture where two families were made identical
-by construction surfaced a real methodological problem before any money was
-spent on a live run:
+`scripts/build_matrix.py` uses disjoint three-response batches. Even batches fit
+centroids; odd batches are held out once for evaluation. The previous overlapping
+leave-one-out subsets leaked raw responses between training and evaluation and
+must not be treated as independent samples.
 
-**With 21 probes the battery has 112 features. At the corpus's default repeat
-counts that is roughly 48 samples, and nearest-centroid over more features than
-samples separates anything, including two families that are the same by
-construction.** The matrix now refuses to report accuracy under those conditions
-and the gate returns `UNDECIDABLE`.
+With 21 probes the battery has 112 fixed features. Feature count alone does not
+establish validity: the gate requires live provenance, complete family coverage,
+a supported independent evaluation, and 95% Wilson confidence bounds. The lower
+accuracy bound must reach 0.75 and each family's upper false-accusation bound must
+stay at or below 0.10. Blind battery pairs block universal verdict publication.
 
-The number this implies is the live budget: samples outnumber features at
-k ≈ 30, which is 21 probes × 30 runs × 4 families ≈ **2,520 calls**. That is
-what a publishable matrix costs. It is cheap enough to be worth doing and large
-enough that it should be planned rather than discovered.
+At `k=30`, there are only five held-out batches per family. Even with zero errors,
+35 held-out batches per family are needed for the current false-accusation
+threshold: `k=210`, or **17,640 calls** for 21 probes and four families. This is a
+best-case minimum, not a guarantee of separation or a publishable result. Do not
+adapt prompts/features after seeing the holdout and reuse it as fresh validation.
 
-With the noise stream shared, the collided pair reports separation 0.00, verdict
-`BLIND`, and a false-accusation rate of 1.000 — the pipeline saying plainly that
-it cannot tell two things apart. That behaviour is the point of the whole
-off-chain half.
+OpenRouter can supply the four fixed model IDs through one key. Plan creation
+reads public endpoint metadata without inference or API charges:
+
+```bash
+python3 scripts/openrouter_battery.py plan --k 210 --out runs/openrouter-plan.json
+# OPENROUTER_API_KEY goes in the repository-root .env (gitignored).
+# Replace the budget below with an explicitly authorized total USD limit.
+python3 scripts/openrouter_battery.py run --plan runs/openrouter-plan.json \
+  --out runs/openrouter --budget 25 --concurrency 16
+python3 scripts/merge_runs.py runs/openrouter/*-class.jsonl --out runs/live.jsonl
+python3 scripts/build_matrix.py runs/live.jsonl --out web/matrix.json
+make gate
+```
+
+The runner pins provider routes, disables fallback, sets endpoint price limits,
+and writes response IDs, observed model/provider and usage/cost. It reserves a
+full-context input charge plus the 600-token output ceiling before each call;
+reported cost releases unused reservation. The budget is cumulative across
+resumes in the same output directory, including every in-flight reservation.
+`--concurrency` defaults to 1 and supports up to 32 requests; only the main
+thread writes the ledger. On a failure it stops admitting requests and records
+all already-running responses before exiting. A stopped or ambiguous request is never
+retried automatically; inspect its ledger and billing first. Use an independently
+capped OpenRouter key for an account-wide limit. Estimates are not billing guarantees.
 
 ## Probe classes
 
@@ -170,7 +191,7 @@ spec/round-envelope.md    the format, the canonical form, the commit-reveal rule
 corpus/probes.json        21 probes, marked up with what each does and does not separate
 scripts/features.py       deterministic feature extraction, no model involved
 scripts/run_battery.py    run probes against endpoints, or synthesize offline
-scripts/build_matrix.py   leave-one-out confusion matrix and blind pairs
+scripts/build_matrix.py   disjoint held-out confusion matrix and blind pairs
 scripts/check_matrix.py   CI gate, exit 0 / 1 / 2 as in Jastrow
 scripts/build_page.py     inline the data into a self-contained page
 test/run_tests.py         95 offline checks
@@ -209,7 +230,7 @@ purpose, are written down in `design/DESIGN.md` rather than made quietly.
 
 ## Next, in order
 
-1. Get keys for three or four families and run the live battery at k = 30.
+1. Get keys for three or four families and plan a live battery at k = 210 or higher; this is a best-case minimum.
    Everything downstream of it already works.
 2. Deploy to Bradbury and run one claim end to end, with the transaction
    diagnostics wired in from the first run — six transactions in the Suborn run

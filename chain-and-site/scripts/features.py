@@ -221,6 +221,8 @@ def distance(a: list[float], b: list[float]) -> float:
     """Plain euclidean on already-normalized features. Deliberately not learned:
     a fitted metric on four families and twenty probes would memorise the
     families and report a number that means nothing out of sample."""
+    if len(a) != len(b):
+        raise ValueError("feature vector dimensions differ")
     return math.sqrt(sum((x - y) ** 2 for x, y in zip(a, b)))
 
 

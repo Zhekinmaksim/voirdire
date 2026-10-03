@@ -1,9 +1,14 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "installCommand": "",
-  "buildCommand": "python3 scripts/build_site.py",
+  "installCommand": "npm ci",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "functions": {
+    "api/*.mjs": {
+      "includeFiles": "{public/deployment.json,chain-and-site/corpus/probes.json}"
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",

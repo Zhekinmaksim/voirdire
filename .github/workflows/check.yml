@@ -10,8 +10,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
       - run: make -C chain-and-site test
-      - run: python3 scripts/build_site.py
+      - run: npm test
+      - run: python3 scripts/package_contract.py
+      - run: git diff --exit-code -- public/voirdire.py public/voirdire.deploy.py public/voirdire.deploy.map.json
+      - run: npm run build
       # Regenerate fixtures after building, so a committed live matrix is not overwritten before its gate.
       - run: make -C chain-and-site fixture matrix page
       - name: Fixture must be undecidable

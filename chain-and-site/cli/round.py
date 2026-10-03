@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build, canonicalize and hash a `voirdire/1` round envelope.
+"""Build, canonicalize and hash a `voirdire/2` round envelope.
 
 The canonical form here MUST be byte-identical to `_canonical` in
 contracts/voirdire.py. If the two ever drift, every reveal fails with
@@ -7,18 +7,17 @@ contracts/voirdire.py. If the two ever drift, every reveal fails with
 chain. test/run_tests.py pins both against the same vectors.
 
     round.py new --claim 0 --probes tok-002,ref-005,stb-001 > round.json
-    round.py fill round.json --from responses.json > filled.json
-    round.py hash filled.json
+    round.py hash round.json
+    # commit; collect responses into filled.json
     round.py check filled.json
 
 Typical flow:
 
     1. `new`   picks probes from the corpus, skipping burned ones, and writes a
                skeleton with a fresh nonce and empty `got` fields
-    2. you run the `sent` fields against the agent as ordinary traffic, at a
-       moment of your choosing, and paste the responses in
-    3. `hash`  gives the digest to commit on chain
-    4. commit, THEN send the probes, THEN reveal
+    2. `hash` the empty response skeleton; commit its digest on chain
+    3. wait for the commitment to be accepted, then send the probes
+    4. fill `got` and `observed_at`, `check`, then reveal within 24 hours
 
 Doing step 4 out of order is the single mistake that makes the whole exercise
 pointless: a probe set the vendor could have seen before answering measures
@@ -35,7 +34,7 @@ import pathlib
 import secrets
 import sys
 
-VERSION = "voirdire/1"
+VERSION = "voirdire/2"
 MAX_FIELD = 4096
 MAX_TRANSCRIPTS = 24
 ACTIVE_CLASSES = ("tokenizer_artifact", "refusal_shape", "repeat_stability")
@@ -56,11 +55,7 @@ def canonical(env: dict) -> str:
             "probe_id": str(t.get("probe_id", "")),
             "probe_class": str(t.get("probe_class", "")),
             "sent": str(t.get("sent", "")),
-            "got": str(t.get("got", "")),
         }
-        observed = str(t.get("observed_at", ""))
-        if observed:
-            one["observed_at"] = observed
         items.append(one)
 
     core = {
@@ -73,6 +68,20 @@ def canonical(env: dict) -> str:
     if endpoint:
         core["endpoint"] = endpoint
     return json.dumps(core, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def canonical_evidence(env: dict) -> str:
+    core = json.loads(canonical(env))
+    for item, original in zip(core["transcripts"], env.get("transcripts") or []):
+        item["got"] = str(original.get("got", ""))
+        observed = str(original.get("observed_at", ""))
+        if observed:
+            item["observed_at"] = observed
+    return json.dumps(core, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def evidence_digest(env: dict) -> str:
+    return hashlib.sha256(canonical_evidence(env).encode("utf-8")).hexdigest()
 
 
 def digest(env: dict) -> str:
@@ -100,7 +109,7 @@ def normalize_for_dedup(text: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def validate(env: dict, corpus: dict | None = None) -> list[str]:
+def validate(env: dict, corpus: dict | None = None, plan: bool = False) -> list[str]:
     """Everything the contract will check, checked locally first. A reveal that
     reverts on chain still burns the window."""
     problems: list[str] = []
@@ -138,7 +147,7 @@ def validate(env: dict, corpus: dict | None = None) -> list[str]:
             problems.append("%s: probe_class %r is not judged in this version" % (where, cls))
         else:
             classes.add(cls)
-        for field in ("sent", "got"):
+        for field in (("sent",) if plan else ("sent", "got")):
             val = str(t.get(field, ""))
             if not val:
                 problems.append("%s: %s is empty" % (where, field))
@@ -236,7 +245,7 @@ def cmd_new(args: argparse.Namespace) -> int:
 
 def cmd_hash(args: argparse.Namespace) -> int:
     env = json.loads(pathlib.Path(args.envelope).read_text(encoding="utf-8"))
-    problems = validate(env, load_corpus())
+    problems = validate(env, load_corpus(), plan=True)
     if problems and not args.force:
         for p in problems:
             print("  " + p, file=sys.stderr)

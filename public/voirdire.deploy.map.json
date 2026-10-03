@@ -1,0 +1,7 @@
+{
+  "source_sha256": "7723631410c236dbff747e068d6efa257d34c87dfc56f806fbf83f16228ffad0",
+  "deployment_sha256": "f844e1f552c625aa9eecdd2ae12655b791682c24cab80ec48464660f114fca1f",
+  "packaging": "zlib-level-9-base64-exact-source",
+  "source_bytes": 45527,
+  "deployment_bytes": 16676
+}

@@ -25,9 +25,20 @@ from model import ScriptedModel, InjectedModel  # noqa: E402
 
 import round as roundtool  # noqa: E402
 import voirdire as vd  # noqa: E402
+from datetime import datetime, timezone
+
+class TransactionDateTime(datetime):
+    current = datetime(2026, 5, 14, 9, 0, tzinfo=timezone.utc)
+
+    @classmethod
+    def now(cls, tz=None):
+        return cls.current.astimezone(tz) if tz else cls.current.replace(tzinfo=None)
+
+vd.datetime = TransactionDateTime
 
 VENDOR = glmod.Address("0x" + "11" * 20)
 CHALLENGER = glmod.Address("0x" + "22" * 20)
+COLLECTOR = glmod.Address("0x" + "44" * 20)
 CHALLENGER2 = glmod.Address("0x" + "33" * 20)
 
 STAKE = 1_000
@@ -57,6 +68,7 @@ def as_(addr, value=0):
 
 
 def fresh(model, min_rounds=2):
+    TransactionDateTime.current = datetime(2026, 5, 14, 9, 0, tzinfo=timezone.utc)
     gl.nondet.handler = model
     gl.advanced.transfers = []
     c = vd.Voirdire()
@@ -70,6 +82,7 @@ def fresh(model, min_rounds=2):
         challenge_stake=STAKE,
         premium=PREMIUM,
         min_rounds=min_rounds,
+        evidence_collector=COLLECTOR.as_hex,
     )
     return c, cid
 
@@ -77,7 +90,7 @@ def fresh(model, min_rounds=2):
 def envelope(claim_id, probes, nonce="a1b2c3d4e5f60718", observed="2026-05-14T09:00:00Z", suffix=""):
     """probes: list of (probe_id, probe_class, got)"""
     return {
-        "version": "voirdire/1",
+        "version": "voirdire/2",
         "claim_id": claim_id,
         "nonce": nonce,
         "transcripts": [
@@ -115,11 +128,21 @@ MIXED_C = [
 ]
 
 
+def reveal(c, commit_id, envelope_json):
+    cm = c.get_commitment(commit_id)
+    if not cm["evidence_digest"] and not cm["opened"] and c._tick() <= cm["expires_at"] and roundtool.digest(json.loads(envelope_json)) == cm["digest"]:
+        sender, value = gl.message.sender_address, gl.message.value
+        as_(COLLECTOR)
+        c.attest_evidence(commit_id, roundtool.evidence_digest(json.loads(envelope_json)))
+        as_(sender, value)
+    return c.reveal(commit_id, envelope_json)
+
+
 def submit(c, cid, env, sender=CHALLENGER, stake=STAKE):
     as_(sender, stake)
     commit_id = c.commit(cid, roundtool.digest(env))
     as_(sender, 0)
-    rid = c.reveal(commit_id, json.dumps(env, ensure_ascii=False))
+    rid = reveal(c, commit_id, json.dumps(env, ensure_ascii=False))
     return commit_id, rid
 
 
@@ -160,7 +183,7 @@ check(
 )
 check(
     "non ascii survives canonicalization unescaped",
-    "Zoë" in roundtool.canonical(envelope(0, [("tok-002", "tokenizer_artifact", "Zoë")])),
+    "Zoë" in roundtool.canonical({**env, "endpoint": "Zoë"}),
 )
 check(
     "dedup flattening strips zero width but judging does not",
@@ -240,16 +263,16 @@ as_(CHALLENGER, 0)
 
 tampered = envelope(cid, MIXED, suffix=" (edited after commit)")
 try:
-    c.reveal(commit_id, json.dumps(tampered, ensure_ascii=False))
+    reveal(c, commit_id, json.dumps(tampered, ensure_ascii=False))
     check("a reveal that does not match the commitment is rejected", False)
 except glmod.gl.vm.UserError as e:
     check("a reveal that does not match the commitment is rejected", "does not match" in str(e))
 
-rid = c.reveal(commit_id, json.dumps(env, ensure_ascii=False))
+rid = reveal(c, commit_id, json.dumps(env, ensure_ascii=False))
 check("matching reveal accepted", rid == 0)
 
 try:
-    c.reveal(commit_id, json.dumps(env, ensure_ascii=False))
+    reveal(c, commit_id, json.dumps(env, ensure_ascii=False))
     check("a commitment cannot be opened twice", False)
 except glmod.gl.vm.UserError:
     check("a commitment cannot be opened twice", True)
@@ -260,7 +283,7 @@ as_(CHALLENGER, STAKE)
 commit_id = c.commit(cid, roundtool.digest(env))
 as_(CHALLENGER2, 0)
 try:
-    c.reveal(commit_id, json.dumps(env, ensure_ascii=False))
+    reveal(c, commit_id, json.dumps(env, ensure_ascii=False))
     check("only the committer may reveal", False)
 except glmod.gl.vm.UserError:
     check("only the committer may reveal", True)
@@ -284,14 +307,17 @@ c, cid = fresh(ScriptedModel())
 env = envelope(cid, MIXED)
 as_(CHALLENGER, STAKE)
 commit_id = c.commit(cid, roundtool.digest(env))
-for _ in range(vd.COMMIT_WINDOW + 1):
-    c._tick()
+expiry = c.get_commitment(commit_id)["expires_at"]
+c._tick = lambda: expiry + 1
 as_(CHALLENGER, 0)
 try:
-    c.reveal(commit_id, json.dumps(env, ensure_ascii=False))
+    reveal(c, commit_id, json.dumps(env, ensure_ascii=False))
     check("reveal after the window closes is rejected", False)
 except glmod.gl.vm.UserError as e:
     check("reveal after the window closes is rejected", "window closed" in str(e))
+check("failed expired reveal leaves commitment available to settle", not c.get_commitment(commit_id)["opened"])
+c.expire_commitment(commit_id)
+check("explicit expiry persists settlement", c.get_commitment(commit_id)["opened"])
 check("forfeited stake stays in the pool, solvency holds", solvent(c))
 
 # ---------------------------------------------------------------------------
@@ -305,7 +331,7 @@ as_(CHALLENGER, STAKE)
 commit_id = c.commit(cid, roundtool.digest(bad_nonce))
 as_(CHALLENGER, 0)
 try:
-    c.reveal(commit_id, json.dumps(bad_nonce, ensure_ascii=False))
+    reveal(c, commit_id, json.dumps(bad_nonce, ensure_ascii=False))
     check("short nonce rejected", False)
 except glmod.gl.vm.UserError as e:
     check("short nonce rejected", "nonce" in str(e))
@@ -315,7 +341,7 @@ as_(CHALLENGER, STAKE)
 commit_id = c.commit(cid, roundtool.digest(out_of_window))
 as_(CHALLENGER, 0)
 try:
-    c.reveal(commit_id, json.dumps(out_of_window, ensure_ascii=False))
+    reveal(c, commit_id, json.dumps(out_of_window, ensure_ascii=False))
     check("transcript outside the declared window rejected in code, not by a validator", False)
 except glmod.gl.vm.UserError as e:
     check(
@@ -328,7 +354,7 @@ as_(CHALLENGER, STAKE)
 commit_id = c.commit(cid, roundtool.digest(inactive_class))
 as_(CHALLENGER, 0)
 try:
-    c.reveal(commit_id, json.dumps(inactive_class, ensure_ascii=False))
+    reveal(c, commit_id, json.dumps(inactive_class, ensure_ascii=False))
     check("a class with no rubric yet is rejected rather than guessed at", False)
 except glmod.gl.vm.UserError as e:
     check("a class with no rubric yet is rejected rather than guessed at", "not judged" in str(e))
@@ -373,7 +399,7 @@ check("solvency holds", solvent(c))
 c, cid = fresh(ScriptedModel(malformed=True))
 _, rid = submit(c, cid, envelope(cid, MIXED))
 check("an unparseable judge reads UNCLEAR everywhere", c.get_round(rid)["verdict"] == "INCONCLUSIVE")
-check("an unparseable referee is inadmissible", c.get_round(rid)["stage_b1"] == "INADMISSIBLE")
+check("inconclusive evidence does not ask a divergence referee", c.get_round(rid)["stage_b1"] == "NOT_REQUIRED")
 check("solvency holds after a malformed round", solvent(c))
 
 # ---------------------------------------------------------------------------
@@ -472,7 +498,7 @@ as_(CHALLENGER, STAKE)
 commit_id = c.commit(cid, roundtool.digest(repeat))
 as_(CHALLENGER, 0)
 try:
-    c.reveal(commit_id, json.dumps(repeat, ensure_ascii=False))
+    reveal(c, commit_id, json.dumps(repeat, ensure_ascii=False))
     check("a revealed probe is burned for this claim", False)
 except glmod.gl.vm.UserError as e:
     check("a revealed probe is burned for this claim", "already revealed" in str(e))
@@ -483,7 +509,7 @@ _, rid = submit(c, cid, envelope(cid, MIXED))
 # rotation does not fire first. Dedup must still recognise the same round.
 first = envelope(cid, MIXED)
 spaced = {
-    "version": "voirdire/1",
+    "version": "voirdire/2",
     "claim_id": cid,
     "nonce": "8888999988889999",
     "transcripts": [
@@ -502,7 +528,7 @@ as_(CHALLENGER, STAKE)
 commit_id = c.commit(cid, roundtool.digest(spaced))
 as_(CHALLENGER, 0)
 try:
-    c.reveal(commit_id, json.dumps(spaced, ensure_ascii=False))
+    reveal(c, commit_id, json.dumps(spaced, ensure_ascii=False))
     check("resubmitting the same round with extra whitespace is caught by dedup", False)
 except glmod.gl.vm.UserError as e:
     check("resubmitting the same round with extra whitespace is caught by dedup",
@@ -602,7 +628,7 @@ check(
 )
 
 single_class = {
-    "version": "voirdire/1",
+    "version": "voirdire/2",
     "claim_id": 0,
     "nonce": "a1b2c3d4e5f60718",
     "transcripts": [
@@ -613,7 +639,7 @@ problems = roundtool.validate(single_class, corpus)
 check("cli refuses a single class round before it costs a window", any("two classes" in p for p in problems))
 
 good = {
-    "version": "voirdire/1",
+    "version": "voirdire/2",
     "claim_id": 0,
     "nonce": "a1b2c3d4e5f60718",
     "transcripts": [
@@ -630,6 +656,117 @@ check(
             {"probe_id": "stb-001", "probe_class": "repeat_stability", "sent": "x", "got": "y"},
         ]}, corpus)),
 )
+
+# Security regression cases exercise distinct actors and time boundaries.
+print("\nv2 security boundaries")
+env = envelope(0, MIXED)
+plan = json.loads(json.dumps(env))
+for t in plan["transcripts"]:
+    t["got"] = ""
+    t["observed_at"] = ""
+check("plan hash is available before any responses exist", roundtool.digest(plan) == roundtool.digest(env))
+check("evidence digest binds actual responses", roundtool.evidence_digest(plan) != roundtool.evidence_digest(env))
+check("evidence digest parity", roundtool.evidence_digest(env) == vd._fingerprint(vd._canonical_evidence(env)))
+
+c, cid = fresh(ScriptedModel())
+as_(CHALLENGER, STAKE)
+cmid = c.commit(cid, roundtool.digest(env))
+try:
+    c.reveal(cmid, json.dumps(env))
+    check("unattested evidence rejected", False)
+except gl.vm.UserError as e:
+    check("unattested evidence rejected", "attestation" in str(e))
+try:
+    c.attest_evidence(cmid, roundtool.evidence_digest(env))
+    check("challenger cannot attest own evidence", False)
+except gl.vm.UserError:
+    check("challenger cannot attest own evidence", True)
+as_(COLLECTOR)
+c.attest_evidence(cmid, roundtool.evidence_digest(env))
+as_(CHALLENGER)
+changed = json.loads(json.dumps(env))
+changed["transcripts"][0]["got"] = "fabrication"
+try:
+    c.reveal(cmid, json.dumps(changed))
+    check("attestation detects tampered response", False)
+except gl.vm.UserError as e:
+    check("attestation detects tampered response", "evidence mismatch" in str(e))
+rid = c.reveal(cmid, json.dumps(env))
+check("burned view returns actual probe ids", c.burned_probes(cid)["probe_ids"] == [t["probe_id"] for t in env["transcripts"]])
+
+c, cid = fresh(ScriptedModel(), min_rounds=1)
+submit(c, cid, envelope(cid, MIXED))
+as_(CHALLENGER2, STAKE)
+cmid = c.commit(cid, roundtool.digest(envelope(cid, MIXED_B)))
+as_(VENDOR)
+try:
+    c.close_claim(cid)
+    check("vendor cannot drain active challenger stake", False)
+except gl.vm.UserError:
+    check("vendor cannot drain active challenger stake", True)
+expiry = c.get_commitment(cmid)["expires_at"]
+for _ in range(100):
+    c._tick()
+check("traffic does not advance expiry", c.get_commitment(cmid)["expires_at"] == expiry)
+c._tick = lambda: expiry + 1
+c.expire_commitment(cmid)
+check("collector no-response timeout refunds stake", c.balance_of(CHALLENGER2.as_hex) == STAKE)
+check("timeout maintains solvency", solvent(c))
+
+model = ScriptedModel()
+model.default_reading = "MISMATCH"
+c, cid = fresh(model)
+_, rid = submit(c, cid, envelope(cid, MIXED))
+as_(CHALLENGER2, STAKE)
+cmid = c.commit(cid, roundtool.digest(envelope(cid, MIXED_B)))
+as_(CHALLENGER)
+c.confirm(rid)
+check("winning challenger cannot steal another active stake", c.balance_of(CHALLENGER.as_hex) == BOND + STAKE and c.balance_of(CHALLENGER2.as_hex) == STAKE)
+check("voiding settles active commitments", c.get_commitment(cmid)["opened"])
+check("b2 receives stored transcript text", any("same_object" in prompt and MIXED[0][2] in prompt for prompt in gl.nondet.calls))
+check("concurrent stake refunds remain solvent", solvent(c))
+
+c, cid = fresh(model)
+_, rid = submit(c, cid, envelope(cid, MIXED))
+cm = c.get_commitment(0)
+c._tick = lambda: cm["expires_at"] + 7 * 86400 + 1
+c.expire_round(rid)
+check("stalled referee timeout refunds stake", c.balance_of(CHALLENGER.as_hex) == STAKE and c.get_round(rid)["settled"])
+
+c, cid = fresh(ScriptedModel())
+TransactionDateTime.current = datetime(2026, 10, 2, tzinfo=timezone.utc)
+as_(CHALLENGER, STAKE)
+try:
+    c.commit(cid, "0" * 64)
+    check("expired claims reject new commitments", False)
+except gl.vm.UserError:
+    check("expired claims reject new commitments", True)
+as_(VENDOR)
+c.close_claim(cid)
+check("expired unexamined claim returns vendor bond", c.balance_of(VENDOR.as_hex) == BOND and c.get_claim(cid)["verification"] == "UNEXAMINED")
+
+print("\nindependent consensus and divergence-only referees")
+model = ScriptedModel(b1=False)
+model.default_reading = "UNCLEAR"
+c, cid = fresh(model)
+_, rid = submit(c, cid, envelope(cid, MIXED))
+check("all UNCLEAR refunds honest stake even if divergence referee would say false", c.balance_of(CHALLENGER.as_hex) == STAKE)
+check("all UNCLEAR does not run either divergence referee", c.get_round(rid)["stage_b1"] == "NOT_REQUIRED" and c.get_round(rid)["stage_b2"] == "NOT_REQUIRED" and not any("visible_in_evidence" in p for p in model.seen_prompts))
+check("each class is independently re-evaluated by validator", len(model.seen_prompts) == 6)
+check("inconclusive remains unexamined", c.get_claim(cid)["verification"] == "UNEXAMINED")
+
+c, cid = fresh(ScriptedModel())
+calls = []
+def disagree(prompt):
+    calls.append(prompt)
+    return json.dumps({"reading": "MATCH" if len(calls) % 2 else "MISMATCH", "fragment": "quote"})
+gl.nondet.handler = disagree
+try:
+    c._read_class(c._claim(cid), "tokenizer_artifact", [("p", "question", "answer")])
+    check("independent enum disagreement rejects consensus", False)
+except gl.vm.UserError as e:
+    check("independent enum disagreement rejects consensus", "disagreed" in str(e))
+check("disagreement does not credit a payout", c.balance_of(CHALLENGER.as_hex) == 0)
 
 # ---------------------------------------------------------------------------
 print()
