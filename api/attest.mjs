@@ -30,7 +30,7 @@ export function createHandler(deps = {}) {
     try {
       const body = bodyOf(req);
       context = getContext();
-      const { commitment } = await check(body, context);
+      const { commitment } = await check(body, context, { allowAttestedRecovery: true });
       const address = context.deployment.contractAddress;
       if (!validProof(proofFor(context.key, address, body.commitId, body.envelope), body.proof)) throw new PublicError('Only evidence obtained by this collector may be attested');
       const evidenceDigest = digest(body.envelope, true);

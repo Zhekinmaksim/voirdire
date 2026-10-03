@@ -189,3 +189,47 @@ test('cached reverted submissions retry only when EVM receipt confirms the same 
   const retry=await invoke(handler,body);assert.equal(retry.status,502);assert.equal(writes,2);
   assert.ok(retry.body.error.includes(evmHash));
 });
+
+function recoveryContext(env, overrides = {}) {
+  const ctx = context(env);
+  const cm = { ...commitment(env), evidence_digest: digest(env, true), opened: true, expires_at: 1, ...overrides.commitment };
+  const c = { status:'CLOSED', evidence_collector:collector.address, agent_id:env.endpoint, valid_from:'2000-01-01',valid_until:'2000-01-02', ...overrides.claim };
+  ctx.client.readContract = async ({functionName,transactionHashVariant}) => {
+    assert.equal(transactionHashVariant,'latest-final');
+    return ({get_commitment:cm,get_claim:c,burned_probes:{probe_ids:env.transcripts.map(t=>t.probe_id)}})[functionName];
+  };
+  return ctx;
+}
+test('attested recovery accepts expired opened closed spent state but collection never relaxes',async()=>{
+  const env=plan(); for(const t of env.transcripts)t.got='Observed answer';
+  const body=await signed(env),ctx=recoveryContext(env);
+  const checked=await validate(body,ctx,{allowAttestedRecovery:true});assert.equal(checked.commitment.evidence_digest,digest(env,true));
+  await assert.rejects(validate({...body,allowAttestedRecovery:true},ctx),/unavailable/);
+  let collected=false;
+  const response=await invoke(collectHandler({setup:()=>ctx,fetch:async()=>{collected=true;throw new Error('must not collect');}}),{...body,apiKey:'not-used',allowAttestedRecovery:true});
+  assert.equal(response.status,400);assert.equal(collected,false);
+  await assert.rejects(validate(body,recoveryContext(env,{commitment:{evidence_digest:''}}),{allowAttestedRecovery:true}),/unavailable/);
+});
+test('attested recovery preserves collector, challenger signature, plan and corpus authentication',async()=>{
+  const env=plan(),body=await signed(env);
+  await assert.rejects(validate(body,recoveryContext(env,{claim:{evidence_collector:caller.address}}),{allowAttestedRecovery:true}),/another collector/);
+  await assert.rejects(validate({...body,signature:'0x'},recoveryContext(env),{allowAttestedRecovery:true}));
+  await assert.rejects(validate(body,recoveryContext(env,{commitment:{claim_id:99}}),{allowAttestedRecovery:true}),/unavailable/);
+  await assert.rejects(validate(body,recoveryContext(env,{commitment:{digest:'00'.repeat(32)}}),{allowAttestedRecovery:true}),/Plan does not match/);
+  const forged=structuredClone(env);forged.transcripts[0].sent+=' injected';
+  await assert.rejects(validate({...body,envelope:forged},recoveryContext(forged),{allowAttestedRecovery:true}),/original prompts/);
+});
+test('attested recovery passes exact signed proof only to knownAttested durable recovery, never writes',async()=>{
+  const env=plan();for(const t of env.transcripts)t.got='Observed answer';
+  const ctx=recoveryContext(env),body={...await signed(env),proof:proofFor(ctx.key,address,0,env)};
+  let calls=0;ctx.client.writeContract=async()=>{assert.fail('Recovery must not write');};
+  const handler=attestHandler({setup:()=>ctx,durable:async(c,b,d,options)=>{calls++;assert.equal(c,ctx);assert.equal(d,digest(env,true));assert.deepEqual(options,{knownAttested:true});return {alreadyAttested:true,evidenceDigest:d};}});
+  const response=await invoke(handler,body);assert.equal(response.status,200);assert.equal(calls,1);
+  const altered=structuredClone(env);altered.transcripts[0].got='Different response';
+  // A valid plan signature and even a valid server proof cannot override the
+  // immutable on-chain evidence hash.
+  const bad=await invoke(handler,{...body,envelope:altered,proof:proofFor(ctx.key,address,0,altered)});
+  assert.equal(bad.status,400);assert.match(bad.body.error,/Different evidence/);assert.equal(calls,1);
+  const badProof=await invoke(handler,{...body,proof:'00'.repeat(32)});
+  assert.equal(badProof.status,400);assert.match(badProof.body.error,/Only evidence obtained/);assert.equal(calls,1);
+});

@@ -1,0 +1,164 @@
+{
+  "schema": "voirdire-calibration-status/1",
+  "status_type": "diagnostic",
+  "gate": "UNDECIDABLE",
+  "gate_exit_code": 2,
+  "approved_for_verdicts": false,
+  "total_responses": 13230,
+  "held_out_batches": 105,
+  "summary": "Live calibration is complete, but it does not meet the evidence threshold for identity verdicts: Llama's 95% upper false-accusation bound is 22.38%, above the 10% limit.",
+  "audited_at": "2026-10-03T13:00:29.471121+00:00",
+  "collection": {
+    "plan_created_at": "2026-10-03T11:21:48.420168+00:00",
+    "first_response_at": "2026-10-03T11:21:52.410286+00:00",
+    "last_response_at": "2026-10-03T13:00:14.402860+00:00",
+    "probe_count": 21,
+    "repeats_per_probe_per_model": 210,
+    "temperature": 1.0,
+    "max_output_tokens": 600,
+    "models": {
+      "gpt-class": {
+        "model_id": "openai/gpt-4o-mini",
+        "provider": "OpenAI",
+        "endpoint_tag": "openai",
+        "successful_responses": 4410,
+        "finish_reasons": {
+          "stop": 4410
+        }
+      },
+      "llama-class": {
+        "model_id": "meta-llama/llama-3.3-70b-instruct",
+        "provider": "Groq",
+        "endpoint_tag": "groq",
+        "successful_responses": 4410,
+        "finish_reasons": {
+          "stop": 4310,
+          "length": 100
+        }
+      },
+      "mistral-class": {
+        "model_id": "mistralai/mistral-small-3.2-24b-instruct",
+        "provider": "Mistral",
+        "endpoint_tag": "mistral/eu",
+        "successful_responses": 4410,
+        "finish_reasons": {
+          "stop": 3815,
+          "length": 594,
+          "tool_calls": 1
+        }
+      }
+    }
+  },
+  "evaluation": {
+    "method": "disjoint-batches-heldout-v1",
+    "feature_width": 112,
+    "responses_per_probe_batch": 3,
+    "split": "Even batch indices train; odd batch indices are held out.",
+    "training_raw_responses": 6615,
+    "held_out_raw_responses": 6615,
+    "raw_response_overlap": 0,
+    "training_batches_per_model": 35,
+    "held_out_batches_per_model": 35,
+    "unique_response_ids": 13230,
+    "accuracy": {
+      "correct": 102,
+      "total": 105,
+      "point_estimate": 0.9714285714285714,
+      "interval_95": [
+        0.9193437093626844,
+        0.9902361609612977
+      ]
+    },
+    "confusion": {
+      "gpt-class": {
+        "gpt-class": 35,
+        "llama-class": 0,
+        "mistral-class": 0
+      },
+      "llama-class": {
+        "gpt-class": 0,
+        "llama-class": 32,
+        "mistral-class": 3
+      },
+      "mistral-class": {
+        "gpt-class": 0,
+        "llama-class": 0,
+        "mistral-class": 35
+      }
+    },
+    "false_accusation": {
+      "gpt-class": {
+        "errors": 0,
+        "held_out_batches": 35,
+        "point_estimate": 0.0,
+        "interval_95": [
+          6.938893903907228e-18,
+          0.09890099232440402
+        ]
+      },
+      "llama-class": {
+        "errors": 3,
+        "held_out_batches": 35,
+        "point_estimate": 0.08571428571428572,
+        "interval_95": [
+          0.02958236826696982,
+          0.22379273965896496
+        ]
+      },
+      "mistral-class": {
+        "errors": 0,
+        "held_out_batches": 35,
+        "point_estimate": 0.0,
+        "interval_95": [
+          6.938893903907228e-18,
+          0.09890099232440402
+        ]
+      }
+    },
+    "error_summary": "All three held-out errors classified Llama as Mistral.",
+    "confidence_method": "Two-sided 95% Wilson intervals, separately for each metric/family; not simultaneous family-wise coverage."
+  },
+  "thresholds": {
+    "min_accuracy_lower_95": 0.75,
+    "max_false_accusation_upper_95_per_family": 0.1
+  },
+  "gate_reasons": [
+    "95% false accusation upper bound for llama-class is 0.224, above 0.100"
+  ],
+  "integrity": {
+    "status": "COMPLETE_AND_REPRODUCIBLE",
+    "complete_expected_coverage": true,
+    "duplicate_upstream_response_ids": 0,
+    "raw_train_test_overlap": 0,
+    "matrix_reproduced_exactly": true
+  },
+  "sha256": {
+    "corpus": "41460c34337545dc2cfb147cde5f63246a191885db1cc18c5590c7f15bd3e905",
+    "plan_file": "1ec90f00ade11a19bc3153849f5ac2f4b092f17406cafcb1100629160d7e23ba",
+    "plan_canonical_json": "3afc59a3d8de3273f652f2716dc8e37538295824f0d77422d72bdff60e0d0ec3",
+    "diagnostic_matrix": "b6efcf6cbef0e3c01fa23d34cde353962adc2a306c8e72c0c27e3e1472e11ba2",
+    "merged_response_dataset": "1562a7e25234adec12971b9b9b0d88a69d6705cc9d4253a04c39f78ff543d466",
+    "per_family_response_files": {
+      "gpt-class": "cfffdd8a5df0547c6401370863f9df94b17769289fe9b5a7ef4cabca6e69611b",
+      "llama-class": "f3c29a68ca884a24b765b8c50aa82a20b3d541663f7f81a2737848936b4837fe",
+      "mistral-class": "cfabb3a0bba85c9394e5f365cbc874dfb26585caf6f3593bb66dd51bba2e8221"
+    },
+    "analysis_sources": {
+      "build_matrix.py": "ae851f40e769a7ec7e7b809dedfa33d039f71d2c53d92b079e2dc77ee9540626",
+      "check_matrix.py": "2f6e372f68d92b5c83053c5b6f1d84d136e5fb05396bdbc53dd6a4e537c62057",
+      "features.py": "f656beee4ab4b78c7453e30bd1fb591a40426c8998e3416e9d99e000b5aab008",
+      "merge_runs.py": "9fe9adb14718d37fe3527a2c401044ccec76a1efae104f94b41f8284306bd1dc",
+      "openrouter_battery.py": "bfc4b724d023006b2cb758ee0d12b31fd951ad80de8563f2c80d0069719989fb",
+      "audit_report.py": "69b10c3b660bc640c41290859fc1c12364536a44709bb39407a3a0d38a588020"
+    }
+  },
+  "limitations": [
+    "This diagnostic report is not an approved matrix and does not authorize identity verdicts.",
+    "Results cover only the listed model IDs, pinned providers, prompts, temperature and 600-token output cap.",
+    "Output-cap truncations were retained: 100 Llama responses and 594 Mistral responses. One Mistral response reported tool_calls with nonempty text; it was also retained.",
+    "The original plan was saved before sampling; evaluator source hashes were recorded at analysis time rather than embedded in that plan.",
+    "Provider and model IDs are OpenRouter-reported metadata, not cryptographic proof of model weights.",
+    "Raw response text and billing journals are not published in this status report; hashes alone do not permit independent recomputation."
+  ],
+  "next_step": "Preregister a new independent evaluation of a fixed abstention rule or revised corpus/classifier. Keep the current evaluated data separate from new confirmation data, and apply the unchanged evidence thresholds before approving verdicts."
+}

@@ -21,6 +21,15 @@ test('only proven precondition failure becomes conflict; ambiguous storage error
   error=new Error('write timed out after it might have committed');
   await assert.rejects(store.compareAndSwap('etag',{}),e=>e===error&&e.code!=='CAS_CONFLICT');
 });
+test('weak transport ETag triggers fresh identity read; its exact body and strong version are paired',async()=>{
+  const calls=[];const sdk={get:async(_path,options)=>{
+    calls.push(options);const identity=options.headers?.['accept-encoding']==='identity';
+    return {statusCode:200,blob:{etag:identity?'"strong-new"':'W/"compressed-old"',size:20},headers:new Headers({'content-encoding':identity?'identity':'br'}),stream:new Response(JSON.stringify({version:identity?2:1})).body};
+  }};
+  const store=blobJournalStore('signer',{sdk});
+  assert.deepEqual(await store.read(),{value:{version:2},etag:'"strong-new"'});assert.equal(calls.length,2);
+  await store.read();assert.equal(calls.length,3);assert.equal(calls[2].headers['accept-encoding'],'identity');
+});
 test('missing store, excessive payload and operation budget stop before network access',async()=>{
   delete process.env.BLOB_STORE_ID;assert.throws(()=>blobJournalStore('signer'),/not configured/);process.env.BLOB_STORE_ID='store_test';
   let calls=0;const store=blobJournalStore('signer',{maxOperations:1,sdk:{get:async()=>{calls++;return null;},put:async()=>{calls++;}}});
