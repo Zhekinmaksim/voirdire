@@ -46,3 +46,12 @@ export function attestationFailureRecord(result, contract, commitId, time=new Da
     error:typeof result.error==='string'?result.error:'Collector submission could not be confirmed.',
     detail:'This hash tracks the EVM submission, not an Intelligent Contract transaction ID. Keep the saved evidence and proof. Check status before any retry.'};
 }
+
+export function roundActions(round, protocol) {
+  const unsettled = !round.settled;
+  return {
+    judge: unsettled && round.verdict === 'PENDING' && protocol?.evidence_publication === 'separate-from-judging',
+    confirm: unsettled && round.verdict === 'INCONSISTENT' && round.stage_b1 === 'ADMISSIBLE' && round.stage_b2 === 'PENDING',
+    recover: unsettled,
+  };
+}

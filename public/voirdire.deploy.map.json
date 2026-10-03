@@ -1,7 +1,7 @@
 {
-  "source_sha256": "7723631410c236dbff747e068d6efa257d34c87dfc56f806fbf83f16228ffad0",
-  "deployment_sha256": "f844e1f552c625aa9eecdd2ae12655b791682c24cab80ec48464660f114fca1f",
+  "source_sha256": "8c38edea66becc2845203b041d2ddf7470fb9a615f424c9f9dd73bb2d3039539",
+  "deployment_sha256": "923847d02a42d2173294e8cb561ef69035a9d5a84a12e4a21dac21b768c1a5dd",
   "packaging": "zlib-level-9-base64-exact-source",
-  "source_bytes": 45527,
-  "deployment_bytes": 16676
+  "source_bytes": 47134,
+  "deployment_bytes": 17004
 }

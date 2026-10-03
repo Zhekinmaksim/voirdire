@@ -26,27 +26,29 @@ without also holding the sentence that says what it is not.
 
 ## Status
 
-Written and passing offline. Nothing is deployed and nothing is measured.
+Protocol v2 is deployed on Bradbury and the application is hosted on Vercel.
+See the [root README](../README.md) and [deployment configuration](../public/deployment.json).
+Live calibration is in progress; no validated separation score is published.
 
 | piece | state |
 | --- | --- |
-| round envelope format `voirdire/1` | written, `spec/round-envelope.md` |
+| round envelope format `voirdire/2` | written, `spec/round-envelope.md` |
 | probe corpus, 21 probes across 3 classes | written, `corpus/probes.json` |
-| intelligent contract | written, 95 offline checks pass |
+| intelligent contract | 121 offline contract checks pass |
 | commit-reveal, rotation, dedup | written and tested |
 | CLI: assemble, validate, canonicalize, hash | written and tested |
 | feature extraction and confusion matrix | written, exercised on a fixture |
 | page | built, `web/index.html` |
 | design system | Hyperstudio "obsidian" via Refero Styles, plus a metal and thin-film layer, `design/DESIGN.md` |
-| live battery against real models | **not run** — no key, no cross-family access |
-| deploy to Bradbury | **not done** |
+| live battery against real models | running with pinned OpenRouter providers and a cumulative budget |
+| deploy to Bradbury | deployed; acceptance and finality are checked separately |
 
 Every separation figure currently in `web/matrix.json` came from synthetic
 responses. The page says so in a banner above everything else, `build_matrix.py`
 stamps it, and `check_matrix.py` exits 2 rather than let a build publish it.
 
 ```
-make test              # 95 offline checks: contract, money, dedup, canonical form
+make test              # contract and measurement regression checks
 make fixture matrix page
 make gate              # exits 2 on a fixture. That is the correct answer.
 ```
@@ -203,7 +205,7 @@ scripts/run_battery.py    run probes against endpoints, or synthesize offline
 scripts/build_matrix.py   disjoint held-out confusion matrix and blind pairs
 scripts/check_matrix.py   CI gate, exit 0 / 1 / 2 as in Jastrow
 scripts/build_page.py     inline the data into a self-contained page
-test/run_tests.py         95 offline checks
+test/run_tests.py         contract and financial regression checks
 design/DESIGN.md          the design system, its source, and the three departures
 web/index.tpl.html        the page
 ```

@@ -21,8 +21,13 @@ Bradbury uses testnet GEN; this repository is not a real-money deployment.
    store it. Provider charges apply to the key supplied by the challenger.
 6. Save the returned evidence and collector proof before submitting attestation.
    Attestation can be retried from the saved bundle without buying new responses.
-7. After attestation finalizes, reveal the exact evidence. GenLayer produces
-   per-class readings. Confirm a pending divergent round, then withdraw credits.
+7. After attestation finalizes, publish the exact evidence. This deterministic
+   step records the responses and burns the probes without asking an LLM.
+8. Request judgement on the published round. GenLayer produces per-class
+   readings. Confirm an admissible divergent round, then withdraw credits.
+   If validators do not agree, the evidence remains public and the round stays
+   pending; it is not counted as an examination. The recovery timeout still
+   releases its stake according to the protocol.
 
 The collector is an explicit trust boundary. It confirms that it obtained these
 responses from the registered OpenRouter model endpoint. It cannot prove which
@@ -102,6 +107,7 @@ separate: a working claim lifecycle does not establish classification accuracy.
 - Commitment covers the probe plan and nonce, not future answers.
 - A 24-hour window uses deterministic transaction time, independent of traffic.
 - Collector signs the complete response envelope before reveal.
+- Evidence publication and subjective judgement are separate transactions.
 - Other challengers' locked stakes are refunded before a divergent claim pays.
 - No collector attestation: expiry releases the challenge stake.
 - Attested evidence withheld past expiry: the challenge stake is forfeited.

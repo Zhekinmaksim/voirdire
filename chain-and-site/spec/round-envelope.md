@@ -84,7 +84,7 @@ stays in the claim pool. Anyone can call `expire_round` seven days after the
 commitment expiry to refund a still-unsettled referee round.
 
 A vendor may close after enough confirmed rounds, or after the declared window
-expires. Active commitments and pending divergences must first be settled.
+expires. Active commitments and every unsettled published round must first be settled.
 An expired claim with no confirmed rounds remains UNEXAMINED after closure.
 
 ## Read interface
@@ -101,3 +101,27 @@ Judgment validation follows independent partial-field comparison: every validato
 runs the same evidence task and compares the parsed decision enum or boolean.
 Supporting prose may differ. There is no second LLM call merely to compare two
 enums. Genuine decision disagreement remains a consensus rejection.
+
+## Durable publication and separate judgment
+
+`publish_evidence(commit_id, envelope_json) -> round_id` performs all commitment,
+collector hash, transcript, window, deduplication and probe checks deterministically.
+It stores the canonical evidence, burns the probe IDs, opens the commitment and
+creates a `PENDING` round with its stake still locked. It invokes no model.
+
+`judge_round(round_id)` judges the immutable stored evidence. Anyone may request
+judgment while the claim is open and the round is pending, unsettled, and within
+seven days after the commitment expiry. Consensus rejection rolls back only that
+judgment transaction: evidence publication survives and `expire_round` remains
+available. Successful judgment follows the unchanged verdict/referee/payout rules.
+Repeated publication and judgment of a judged or settled round reject.
+
+`reveal` remains the atomic publication-plus-judgment convenience method; its
+publication does not survive rejection of that same transaction. Production
+clients should use the separate calls. `protocol_info.evidence_publication` is
+`separate-from-judging`. Canonical plan/evidence bytes remain version 2.
+
+Vendor claim labels are limited to 256 characters and cannot contain ASCII control
+characters. Oracle prompts serialize vendor metadata inside content-derived markers
+and explicitly treat it as untrusted data. This reduces instruction confusion; it
+does not prove resistance to every prompt-injection strategy or model-family identity.

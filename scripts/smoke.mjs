@@ -86,6 +86,17 @@ try {
     if(cm.evidence_digest!==digest(state.envelope,true))throw new Error('Attestation is not finalized');
     state.roundId=Number(await read('round_count'));save();
     await write('reveal',[state.commitId,JSON.stringify(state.envelope)]);
+  }else if(command==='publish'){
+    if(state.transactions.some(t=>t.functionName==='publish_evidence'))throw new Error('Evidence publication already submitted; inspect its receipt before retrying');
+    const cm=await read('get_commitment',[state.commitId]);
+    if(cm.opened||cm.evidence_digest!==digest(state.envelope,true))throw new Error('Commitment is already opened or attestation is unavailable');
+    state.roundId=Number(await read('round_count'));save();
+    await write('publish_evidence',[state.commitId,JSON.stringify(state.envelope)]);
+  }else if(command==='judge'){
+    if(state.transactions.some(t=>t.functionName==='judge_round'))throw new Error('Judgement already submitted; inspect its receipt before retrying');
+    const round=await read('get_round',[state.roundId]);
+    if(round.settled||round.verdict!=='PENDING')throw new Error('No published round awaiting judgement');
+    await write('judge_round',[state.roundId]);
   }else if(command==='confirm'){
     const round=await read('get_round',[state.roundId]);
     if(round.settled||round.verdict!=='INCONSISTENT')throw new Error('No divergent round needing confirmation');
@@ -99,5 +110,5 @@ try {
   }else if(command==='status'){
     const roundCount=Number(await read('round_count'));
     console.log(json({claim:state.claimId===undefined?null:await read('get_claim',[state.claimId]),commitment:state.commitId===undefined?null:await read('get_commitment',[state.commitId]),round:state.roundId===undefined||state.roundId>=roundCount?null:await read('get_round',[state.roundId]),credit:await read('balance_of',[c.account.address]),solvency:await read('solvency')}));
-  }else throw new Error('Use register|commit|collect|attest|reveal|confirm|withdraw|close|status');
+  }else throw new Error('Use register|commit|collect|attest|publish|judge|reveal|confirm|withdraw|close|status');
 }catch(e){console.error(e.shortMessage||e.message);process.exitCode=1;}

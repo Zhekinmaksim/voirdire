@@ -70,3 +70,17 @@ test('collector failure retains a validated EVM hash with its commitment context
  assert.equal(attestationFailureRecord({evmTransactionHash:hash,outcome:'reverted'},'0xcontract',12).status,'EVM reverted');
  assert.equal(attestationFailureRecord({evmTransactionHash:'invalid'},'0xcontract',12),null);
 });
+
+import {roundActions} from '../app/src/lifecycle.js';
+test('published pending rounds can request judgement without allowing premature confirmation',()=>{
+ const protocol={evidence_publication:'separate-from-judging'};
+ const round={verdict:'PENDING',stage_b1:'PENDING',stage_b2:'PENDING',settled:false};
+ assert.deepEqual(roundActions(round,protocol),{judge:true,confirm:false,recover:true});
+ assert.equal(roundActions(round,{}).judge,false);
+ assert.deepEqual(roundActions({...round,settled:true},protocol),{judge:false,confirm:false,recover:false});
+});
+test('confirmation is only available for inconsistent findings admitted by first referee',()=>{
+ const round={verdict:'INCONSISTENT',stage_b1:'ADMISSIBLE',stage_b2:'PENDING',settled:false};
+ assert.equal(roundActions(round,{}).confirm,true);
+ for(const change of [{stage_b1:'PENDING'},{stage_b1:'INADMISSIBLE'},{stage_b2:'ADMISSIBLE'},{verdict:'PENDING'},{verdict:'INCONCLUSIVE'},{settled:true}])assert.equal(roundActions({...round,...change},{}).confirm,false);
+});
