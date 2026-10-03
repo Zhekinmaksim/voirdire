@@ -64,6 +64,19 @@ test('signature persisted before SDK send; receipt retains permanent job dedup',
   assert.equal((await submit(restarted)).transactionHash, icHash);
   assert.equal(restarted.writes.length, 0); assert.equal(restarted.sent.length, 0);
 });
+test('already visible attestation reconciles a saved signed attempt without another send',async()=>{
+  const f=fixture();const cas=f.shared.compareAndSwap;
+  f.shared.compareAndSwap=async(etag,value)=>{
+    if(value.jobs[jobKey]?.attempts.at(-1)?.state==='mined')throw new Error('receipt persistence interrupted');
+    return cas(etag,value);
+  };
+  await assert.rejects(submit(f),/receipt persistence interrupted/);
+  assert.equal((await f.shared.read()).value.jobs[jobKey].attempts.at(-1).state,'signed');
+  f.shared.compareAndSwap=cas;
+  const result=await submitDurably(f.context,{commitId:0},evidenceDigest,{journal:f.journal,knownAttested:true});
+  assert.equal(result.transactionHash,icHash);assert.equal(f.sent.length,1);assert.equal(f.writes.length,1);
+  assert.equal((await f.shared.read()).value.active,null);
+});
 test('ambiguous committed CAS prevents SDK broadcast and restart recovers stored identical bytes', async () => {
   const f = fixture(); const original = f.shared.compareAndSwap;
   f.shared.compareAndSwap = async (etag, value) => {

@@ -1,6 +1,7 @@
 import { setup, validate, response, bodyOf, PublicError, safeError } from '../lib/collector.mjs';
 import { digest, proofFor, validProof } from '../lib/evidence.mjs';
 import { submitDurably } from '../lib/durable-attestation.mjs';
+import { JournalError } from '../lib/attestation-journal.mjs';
 export const config = { maxDuration: 60 };
 export function createHandler(deps = {}) {
   const getContext = deps.setup || setup;
@@ -12,6 +13,8 @@ export function createHandler(deps = {}) {
   const submissions = new Map();
   let signerQueue = Promise.resolve();
   const failure = (error, context) => {
+    console.log(JSON.stringify({event:'collector_failure_kind',errorType:error.name,
+      ...(error instanceof JournalError?{reason:error.message}:{})}));
     const signed = context?.sponsorship?.lastSigned;
     if (!signed) return null;
     const reverted = String(error.message).startsWith('Transaction reverted: EVM tx ');
