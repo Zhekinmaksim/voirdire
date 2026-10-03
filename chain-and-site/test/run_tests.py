@@ -71,6 +71,7 @@ def fresh(model, min_rounds=2):
     TransactionDateTime.current = datetime(2026, 5, 14, 9, 0, tzinfo=timezone.utc)
     gl.nondet.handler = model
     gl.advanced.transfers = []
+    gl.evm.calls = []
     c = vd.Voirdire()
     as_(VENDOR, BOND)
     cid = c.register_claim(
@@ -447,6 +448,15 @@ as_(CHALLENGER, 0)
 withdrawn = c.withdraw()
 check("withdraw moves the credited balance", withdrawn == before + BOND + STAKE)
 check("withdraw emitted exactly one transfer", len(gl.advanced.transfers) == 1)
+check("withdraw uses real EVM interface shape and original Address", len(gl.evm.calls) == 1 and gl.evm.calls[0]["address"] is CHALLENGER)
+check("withdraw sends exact credited value on finalization", gl.evm.calls[0]["value"] == withdrawn and gl.evm.calls[0]["on"] == "finalized")
+check("withdraw removes credited liability consistently", c.solvency()["credited"] == 0 and solvent(c))
+try:
+    glmod.Address(CHALLENGER)
+    check("stub reproduces runtime rejection of Address(Address)", False)
+except TypeError:
+    check("stub reproduces runtime rejection of Address(Address)", True)
+
 check("balance is zero after withdraw", c.balance_of(CHALLENGER.as_hex) == 0)
 try:
     c.withdraw()

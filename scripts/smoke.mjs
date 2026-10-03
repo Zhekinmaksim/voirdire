@@ -31,7 +31,8 @@ try {
   if(command==='register'){
     if(state.transactions.some(t=>t.functionName==='register_claim'))throw new Error('Registration already submitted; recover its finalized claim instead');
     state.claimId=Number(await read('claim_count'));save();
-    await write('register_claim',['openrouter:openai/gpt-4o-mini','gpt-class','openai/gpt-4o-mini','2026-10-03','2026-10-10',1000000000000n,1000000000000n,1,config.collectorAddress],3000000000000n);
+    state.claimLabel=process.env.SMOKE_CLAIM_MODEL||'gpt-class';save();
+    await write('register_claim',['openrouter:openai/gpt-4o-mini',state.claimLabel,process.env.SMOKE_CLAIM_VERSION||'openai/gpt-4o-mini','2026-10-03','2026-10-10',1000000000000n,1000000000000n,1,config.collectorAddress],3000000000000n);
   }else if(command==='commit'){
     if(state.transactions.some(t=>t.functionName==='commit'))throw new Error('Commitment already submitted');
     const claim=await read('get_claim',[state.claimId]);

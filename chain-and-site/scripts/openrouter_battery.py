@@ -421,7 +421,11 @@ def authorize_recovery(out, events, policy, current=None):
     elif history[0] != expected:
         raise ValueError("recovery policy differs from saved policy; refusing allowance reset")
     latest = {e["identity"]: (i, e) for i, e in enumerate(events)}
+    manual_one_shots = {e["identity"]: e for e in history
+                        if e["event"] == "authorized_one_shot_503_recovery"}
     for identity in pending:
+        if identity in manual_one_shots and latest[identity][0] != manual_one_shots[identity]["failure_line"]:
+            raise ValueError("one-shot manual recovery exhausted for " + identity)
         _, failure = latest[identity]
         if failure["event"] != "failed" or failure.get("http_status") != 429:
             raise ValueError("unresolved non-429 or undrained request; no supervised retry")
@@ -430,6 +434,14 @@ def authorize_recovery(out, events, policy, current=None):
     counts = {}
     for e in authorizations:
         counts[e["identity"]] = counts.get(e["identity"], 0) + 1
+    # The per-identity ceiling includes any manually reconciled attempts made
+    # before supervision began; an operator restart cannot reset that history.
+    prior_resolutions = {}
+    for e in events:
+        if e["event"] == "resolved_failed":
+            prior_resolutions[e["identity"]] = prior_resolutions.get(e["identity"], 0) + 1
+    for identity, count in prior_resolutions.items():
+        counts[identity] = max(counts.get(identity, 0), count)
     additions = [(identity, *latest[identity]) for identity in pending if latest[identity][0] not in by_attempt]
     if len(authorizations) + len(additions) > policy["max_retries"]:
         raise ValueError("429 recovery allowance exhausted")
@@ -443,7 +455,9 @@ def authorize_recovery(out, events, policy, current=None):
                  "not_before": current + delay, "at": now()}
         append(journal, event)
         by_attempt[index] = event
-    return max((by_attempt[latest[identity][0]]["not_before"] for identity in pending), default=current)
+    return max([current,
+                *(by_attempt[latest[identity][0]]["not_before"] for identity in pending),
+                *(e["not_before"] for e in manual_one_shots.values())])
 
 
 def supervise(plan, out, budget, key, concurrency=9, min_interval=1.2,
@@ -464,10 +478,10 @@ def supervise(plan, out, budget, key, concurrency=9, min_interval=1.2,
             due = authorize_recovery(out, events, policy)
             if pending:
                 print("RECOVERY: %d upstream 429 attempts; full reservations will be charged after cooldown" % len(pending), flush=True)
-                while time.time() < due:
-                    time.sleep(min(60.0, max(0.0, due - time.time())))
-                for identity in pending:
-                    reconcile(out, identity, True)
+            while time.time() < due:
+                time.sleep(min(60.0, max(0.0, due - time.time())))
+            for identity in pending:
+                reconcile(out, identity, True)
             try:
                 return run(plan, out, budget, key, concurrency=concurrency, min_interval=min_interval)
             except RuntimeError:

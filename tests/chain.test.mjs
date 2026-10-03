@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { encodeFunctionResult } from 'viem';
+import { encodeFunctionResult, keccak256 } from 'viem';
 import { testnetBradbury } from 'genlayer-js/chains';
-import { canFinalize, finalize } from '../scripts/chain.mjs';
+import { canFinalize, finalize, auditedAccount } from '../scripts/chain.mjs';
 const hash = `0x${'11'.repeat(32)}`;
 function fake({ready=true,failEstimate=false,reverted=false}={}) {
   const calls=[],logs=[];
@@ -36,4 +36,12 @@ test('successful guarded finalization records submission and both receipts',asyn
 test('mined revert is reported without retry',async()=>{
   const f=fake({reverted:true});await assert.rejects(()=>finalize(f.c,hash,f.options),/No automatic retry/);
   assert.equal(f.calls.filter(x=>x==='send').length,1);
+});
+test('signing preserves a public recovery hash before broadcast without logging calldata or raw transaction',async()=>{
+  const logs=[],raw='0x01020304';
+  const account=auditedAccount(Object.freeze({address:'0xaccount',signTransaction:async()=>raw}),e=>logs.push(e));
+  const signed=await account.signTransaction({to:'0xdestination',nonce:7,value:0n,gas:42n,gasPrice:3n,data:'private-input'});
+  assert.equal(signed,raw);assert.equal(logs[0].evmHash,keccak256(raw));
+  assert.equal(logs[0].nonce,7);assert.equal(logs[0].gas,42n);
+  assert.ok(!Object.values(logs[0]).includes(raw));assert.ok(!Object.values(logs[0]).includes('private-input'));
 });

@@ -249,6 +249,28 @@ class BatteryTests(unittest.TestCase):
             with self.assertRaises(ValueError): O.authorize_recovery(out,events,policy,current=5000)
             self.assertEqual(len(O.records(out/"recovery.jsonl")),3)
 
+    def test_recovery_identity_limit_includes_earlier_manual_attempts(self):
+        events=[]
+        for attempt in range(2):
+            events += self.failed_events()
+            events.append({"event":"resolved_failed","identity":"x","cost_usd":"0.1"})
+        events += self.failed_events()
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaises(ValueError):
+                O.authorize_recovery(Path(d),events,self.recovery_policy(),100)
+
+    def test_manual_503_is_one_shot_with_persistent_cooldown(self):
+        with tempfile.TemporaryDirectory() as d:
+            out=Path(d);policy=self.recovery_policy()
+            self.assertEqual(O.authorize_recovery(out,[],policy,current=100),100)
+            O.append(out/"recovery.jsonl",{"event":"authorized_one_shot_503_recovery",
+                "identity":"x","failure_line":1,"not_before":160})
+            events=self.failed_events(503)
+            events.append({"event":"resolved_failed","identity":"x","cost_usd":"0.1"})
+            self.assertEqual(O.authorize_recovery(out,events,policy,current=110),160)
+            events += self.failed_events(429)
+            with self.assertRaises(ValueError): O.authorize_recovery(out,events,policy,current=200)
+
     def test_recovery_global_limit_cannot_reset_on_restart(self):
         with tempfile.TemporaryDirectory() as d:
             out=Path(d);events=[];policy=self.recovery_policy(max_retries=1)

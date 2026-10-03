@@ -5,12 +5,24 @@ import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { createClient, createAccount } from 'genlayer-js';
 import { testnetBradbury } from 'genlayer-js/chains';
-import { encodeFunctionData, decodeFunctionResult, createPublicClient, http } from 'viem';
+import { encodeFunctionData, decodeFunctionResult, createPublicClient, http, keccak256 } from 'viem';
 
 export const json = value => JSON.stringify(value, (_, v) => typeof v === 'bigint' ? v.toString() : v);
 export function record(event) {
   mkdirSync('runs', { recursive: true });
   appendFileSync('runs/transactions.jsonl', json({ at: new Date().toISOString(), ...event }) + '\n', { mode: 0o600 });
+}
+export function auditedAccount(account, log = record) {
+  return { ...account, async signTransaction(request, ...rest) {
+    const serialized = await account.signTransaction(request, ...rest);
+    // Persist the public hash before the SDK broadcasts. Never log signing
+    // material or the serialized transaction, including on later SDK failure.
+    log({ event: 'evm_signed', evmHash: keccak256(serialized),
+      from: account.address, to: request.to, nonce: request.nonce,
+      value: request.value, gas: request.gas, gasPrice: request.gasPrice,
+      maxFeePerGas: request.maxFeePerGas });
+    return serialized;
+  } };
 }
 export async function client(signer = false) {
   let account;
@@ -23,7 +35,7 @@ export async function client(signer = false) {
       key = await keytar.getPassword('genlayer-cli', 'account:' + config.activeAccount);
     }
     if (!key) throw new Error('Unlock the GenLayer CLI account; no signing key is available.');
-    account = createAccount(key);
+    account = auditedAccount(createAccount(key));
   }
   return createClient({ chain: testnetBradbury, account, endpoint: process.env.GENLAYER_RPC_URL || undefined });
 }

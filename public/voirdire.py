@@ -713,20 +713,18 @@ class Voirdire(gl.Contract):
             raise gl.vm.UserError("nothing to withdraw")
         self.balances[gl.message.sender_address] = u256(0)
         self.credited = u256(int(self.credited) - amount)
-        if getattr(gl, "evm", None) is not None:
-            @gl.evm.contract_interface
-            class _Recipient:
-                class View:
-                    pass
+        # sender_address already is Address. Address(Address) is invalid in the
+        # pinned runtime; the EVM proxy accepts the existing typed address.
+        # External transfers execute on finalization via the ghost contract.
+        @gl.evm.contract_interface
+        class _Recipient:
+            class View:
+                pass
 
-                class Write:
-                    pass
+            class Write:
+                pass
 
-            _Recipient(Address(gl.message.sender_address)).emit_transfer(
-                value=u256(amount)
-            )
-        else:
-            gl.advanced.emit_transfer(gl.message.sender_address, amount)
+        _Recipient(gl.message.sender_address).emit_transfer(value=u256(amount))
         return amount
 
     # ----------------------------------------------------------------- reading

@@ -47,7 +47,7 @@ bigint = int
 class Address:
     def __init__(self, value):
         if isinstance(value, Address):
-            value = value._v
+            raise TypeError("cannot convert Address object to bytes")
         self._v = str(value).lower()
 
     @property
@@ -150,6 +150,28 @@ class _Advanced:
         self.transfers.append((to, int(amount)))
 
 
+class _Evm:
+    """Production-shaped EVM interface; no permissive Address recasting."""
+    def __init__(self, transfers):
+        self._transfers = transfers
+        self.calls = []
+
+    def contract_interface(self, declaration):
+        owner = self
+        class Proxy:
+            def __init__(self, address):
+                if not isinstance(address, Address):
+                    raise TypeError("Address required by EVM contract interface")
+                self.address = address
+
+            def emit_transfer(self, *, value):
+                if value <= 0:
+                    raise ValueError("transfer value must be positive")
+                owner.calls.append({"address": self.address, "value": value, "on": "finalized"})
+                owner._transfers.emit_transfer(self.address, value)
+        return Proxy
+
+
 class _PublicWrite:
     def __call__(self, fn):
         fn._gl_public = "write"
@@ -204,6 +226,7 @@ class _Gl:
         self.message = _Message()
         self.nondet = _Nondet()
         self.advanced = _Advanced()
+        self.evm = _Evm(self.advanced)
 
 
 gl = _Gl()
