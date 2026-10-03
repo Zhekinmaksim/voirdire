@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Voirdire — what the probes can and cannot establish</title>
+<meta name="description" content="A bonded market on whether an agent's behaviour matches the model its vendor claims. Built on GenLayer. Not proof of model identity.">
+<style>
+/* Base system: Hyperstudio, "blueprint scratched into obsidian", via Refero
+   Styles — tokens verbatim. The metal and thin-film layer on top is this
+   project's own; see design/DESIGN.md for what was added and why. */
+:root{
+  --obsidian:#101010;
+  --carbon:#080808;
+  --chalk:#f3f3f3;
+  --smoke:#9c9c9c;
+  --ash:#c1c1c1;
+  --graphite:#212121;
+  --iron:#474747;
+  --slate:#3b3d45;
+  --signal:#ffffff;
+  --gold:#6f6759;
+
+  --sans:'Aeonik','Satoshi','General Sans','Inter',ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:'Input','IBM Plex Mono','JetBrains Mono','Space Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+
+  --r-tag:4px;
+  --r-card:8px;
+  --r-pill:9999px;
+
+  --gap:120px;
+  --pad:32px;
+  --page:1200px;
+  --measure:66ch;
+
+  /* Thin film. One spectrum, reused wherever interference is being shown, so
+     the page never invents a second rainbow. */
+  --film:linear-gradient(100deg,
+      #7fd8ff 0%, #9ea8ff 18%, #d59bff 34%,
+      #ff9ec4 50%, #ffcf8f 66%, #b9f2c4 82%, #7fd8ff 100%);
+  /* Brushed steel: a bright top edge, a dark belly, a faint return at the
+     bottom. This is the whole trick that makes a flat fill read as metal. */
+  --steel:linear-gradient(180deg,
+      rgba(255,255,255,.085) 0%, rgba(255,255,255,.022) 18%,
+      rgba(0,0,0,.30) 62%, rgba(255,255,255,.030) 100%);
+  --edge:linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,.03) 40%, rgba(0,0,0,.55));
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--obsidian);color:var(--chalk);
+  font-family:var(--sans);font-size:16px;line-height:1.55;font-weight:400;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Atmosphere: a very low iridescent wash and a grain layer, both inert.
+   Without the grain, large dark gradients band badly on 8-bit panels. */
+body::before{
+  content:"";position:fixed;inset:-20%;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(52% 40% at 18% 0%, rgba(127,216,255,.10), transparent 62%),
+    radial-gradient(46% 38% at 86% 8%, rgba(213,155,255,.09), transparent 64%),
+    radial-gradient(60% 46% at 50% 104%, rgba(185,242,196,.05), transparent 66%);
+  filter:blur(20px);
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.32;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.45'/%3E%3C/svg%3E");
+}
+.above{position:relative;z-index:1}
+
+h1,h2,h3{margin:0;font-weight:400;color:var(--chalk)}
+h1{font-size:68px;font-size:clamp(42px,6.4vw,76px);line-height:1.02;letter-spacing:-.03em}
+h2{font-size:44px;font-size:clamp(30px,3.6vw,44px);line-height:1.07;letter-spacing:-.31px}
+h3{font-size:23px;line-height:1.07}
+p{margin:0;max-width:var(--measure)}
+a{color:var(--chalk);text-underline-offset:4px;text-decoration-color:var(--iron)}
+a:hover{text-decoration-color:var(--ash)}
+a:focus-visible,button:focus-visible{outline:1px solid var(--ash);outline-offset:3px}
+.mono{font-family:var(--mono);letter-spacing:-.022em}
+.smoke{color:var(--smoke)}
+.small{font-size:14px}
+.shell{max-width:var(--page);margin:0 auto;padding:0 28px}
+.rule{height:1px;background:var(--graphite);border:0;margin:0}
+
+/* ---- metal type -------------------------------------------------------- */
+/* Progressive: plain chalk first, metal only where the engine can clip a
+   gradient to glyphs. An engine that cannot would otherwise render the
+   wordmark invisible. */
+.metal{color:var(--chalk)}
+@supports ((-webkit-background-clip:text) or (background-clip:text)){
+  .metal{
+    background:linear-gradient(178deg,#ffffff 0%,#cfd4da 26%,#7c848d 46%,#eef1f4 56%,#9aa2ab 72%,#5d646c 100%);
+    -webkit-background-clip:text;background-clip:text;
+    color:transparent;-webkit-text-fill-color:transparent;
+  }
+}
+/* One orchestrated moment: a single specular pass across the wordmark on load. */
+.sheen{position:relative;display:inline-block;overflow:hidden;padding:0 .06em;margin:0 -.06em}
+.sheen::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.55) 50%,transparent 62%);
+  -webkit-mask-image:linear-gradient(#000,#000);
+  mix-blend-mode:screen;transform:translateX(-120%);
+  animation:pass 2.6s cubic-bezier(.22,.61,.36,1) .35s 1 both;
+}
+@keyframes pass{to{transform:translateX(120%)}}
+
+/* ---- bevelled panel ---------------------------------------------------- */
+.panel{
+  position:relative;border-radius:var(--r-card);
+  background:
+    linear-gradient(var(--carbon),var(--carbon)) padding-box,
+    var(--edge) border-box;
+  border:1px solid transparent;
+}
+/* brushed grain, horizontal, barely there */
+.panel::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:
+    var(--steel),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.014) 0 1px,transparent 1px 3px);
+  opacity:.9;
+}
+.panel > *{position:relative}
+
+/* ---- masthead ---------------------------------------------------------- */
+.masthead{border-bottom:1px solid var(--graphite);background:rgba(8,8,8,.72);position:sticky;top:0;z-index:5;backdrop-filter:blur(10px)}
+.masthead .shell{display:flex;align-items:center;justify-content:space-between;height:62px;gap:16px}
+.wordmark{font-size:18px;letter-spacing:-.01em}
+.masthead nav{display:flex;gap:6px;font-size:14px}
+.masthead nav a{color:var(--smoke);text-decoration:none;padding:6px 12px;border-radius:var(--r-tag)}
+.masthead nav a:hover{color:var(--chalk);background:rgba(255,255,255,.045)}
+
+/* ---- hero -------------------------------------------------------------- */
+.hero{padding:52px 0 60px;border-bottom:1px solid var(--graphite)}
+.hero-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:56px;align-items:center}
+.hero h1{margin-bottom:22px}
+.fringe{width:100%;max-width:420px;height:auto;display:block;margin-left:auto}
+.hero .lede{font-size:19px;line-height:1.45;max-width:52ch;color:var(--smoke)}
+.disclaimer{
+  margin-top:26px;padding:20px 24px;max-width:58ch;border-radius:var(--r-card);
+  border:1px solid transparent;
+  background:linear-gradient(var(--obsidian),var(--obsidian)) padding-box, var(--film) border-box;
+}
+.disclaimer p{max-width:none;color:var(--ash)}
+
+.provenance-bar{border-bottom:1px solid var(--graphite);background:rgba(255,255,255,.022)}
+.notice{display:flex;gap:12px;align-items:flex-start;padding:13px 0}
+.notice .dot{
+  flex:0 0 auto;width:8px;height:8px;border-radius:var(--r-pill);margin-top:7px;
+  background:var(--film);background-size:300% 100%;animation:drift 9s linear infinite;
+}
+.notice.live .dot{background:var(--gold);animation:none}
+.notice p{font-size:14px;line-height:1.5;color:var(--smoke);max-width:80ch}
+.notice strong{color:var(--chalk);font-weight:400}
+@keyframes drift{to{background-position:300% 0}}
+
+section{padding:var(--gap) 0 0}
+section .lead{margin-top:16px;color:var(--smoke);font-size:17px}
+
+/* ---- separation grid --------------------------------------------------- */
+.grid-wrap{margin-top:36px;overflow-x:auto;border-radius:var(--r-card)}
+table.grid{border-collapse:separate;border-spacing:0;width:100%;font-size:14px}
+table.grid th,table.grid td{border-bottom:1px solid var(--graphite);border-right:1px solid var(--graphite);padding:18px 20px;text-align:left;vertical-align:top}
+table.grid tr:last-child th,table.grid tr:last-child td{border-bottom:0}
+table.grid th:last-child,table.grid td:last-child{border-right:0}
+table.grid th{color:var(--smoke);font-weight:400;white-space:nowrap}
+table.grid thead th{color:var(--chalk)}
+td .n{display:block;font-family:var(--mono);font-size:19px;letter-spacing:-.022em;font-variant-numeric:tabular-nums}
+td .t{display:block;font-size:13px;color:var(--smoke);margin-top:5px}
+td.self .n{color:var(--iron)}
+/* separating cells: neutral steel, luminance carries magnitude */
+td.sep{position:relative}
+td.sep::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,0) 70%);
+  opacity:var(--lum,.3);
+}
+td.sep > *{position:relative}
+/* The one cell the instrument could not resolve: the surface goes spectral.
+   The film is the cell's own background, with a solid light fallback declared
+   first — the text on it is dark, so a cell that failed to paint its gradient
+   would otherwise be dark on dark and unreadable. */
+td.blind{
+  background-color:#cdd6df;
+  background-image:var(--film);
+  background-size:300% 100%;
+  animation:drift 11s linear infinite;
+}
+td.blind .n,td.blind .t{color:#0b0b0b}
+td.blind .t{opacity:.72}
+
+.legend{margin-top:16px;font-size:14px;color:var(--smoke);max-width:var(--measure)}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1px;margin:44px 0 0;padding:0;list-style:none;background:var(--graphite);border-top:1px solid var(--graphite);border-bottom:1px solid var(--graphite)}
+.stats li{background:var(--obsidian);padding:28px 24px}
+.stats .v{display:block;font-size:34px;line-height:1.03;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.stats .k{display:block;font-size:14px;color:var(--smoke);margin-top:10px;max-width:28ch;line-height:1.45}
+
+/* ---- sequence ---------------------------------------------------------- */
+ol.flow{margin:36px 0 0;padding:0;list-style:none;counter-reset:step;max-width:var(--measure)}
+ol.flow li{
+  counter-increment:step;display:grid;grid-template-columns:44px 1fr;gap:20px;
+  padding:22px 0;border-top:1px solid var(--graphite);color:var(--ash);
+}
+ol.flow li:last-child{border-bottom:1px solid var(--graphite)}
+ol.flow li::before{content:"0" counter(step);font-family:var(--mono);font-size:13px;color:var(--iron);padding-top:5px}
+
+/* ---- corpus ------------------------------------------------------------ */
+.filters{display:flex;flex-wrap:wrap;gap:10px;margin-top:32px}
+.filters button{
+  font:inherit;font-size:14px;padding:9px 18px;cursor:pointer;color:var(--smoke);
+  background:transparent;border:1px solid var(--graphite);border-radius:var(--r-pill);
+}
+.filters button:hover{color:var(--chalk);border-color:var(--iron)}
+.filters button[aria-pressed="true"]{background:var(--signal);color:var(--obsidian);border-color:var(--signal)}
+
+/* One bevelled plate around the whole corpus, hairlines between rows. Twenty-one
+   stacked panels would be noise; in this system the line is the layout. */
+.probes{margin-top:28px;border-radius:var(--r-card);overflow:hidden}
+.probe{border-bottom:1px solid var(--graphite)}
+.probe:last-child{border-bottom:0}
+.probe > summary{
+  list-style:none;cursor:pointer;padding:18px var(--pad);
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+}
+.probe > summary::-webkit-details-marker{display:none}
+.probe > summary:hover{background:rgba(255,255,255,.03)}
+.probe > summary:focus-visible{outline:1px solid var(--ash);outline-offset:-2px}
+.probe .id{font-family:var(--mono);font-size:14px;letter-spacing:-.022em;color:var(--chalk)}
+/* the collapsed row still has to be scannable, so it carries the opening of the
+   carrier task, cut with an ellipsis */
+.peek{
+  flex:1 1 220px;min-width:0;color:var(--smoke);font-size:14px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.probe[open] .peek{visibility:hidden}
+.chev{
+  flex:0 0 auto;width:9px;height:9px;margin-left:auto;
+  border-right:1px solid var(--iron);border-bottom:1px solid var(--iron);
+  transform:rotate(45deg) translate(-2px,-2px);transition:transform .18s ease;
+}
+.probe[open] .chev{transform:rotate(-135deg) translate(-3px,-3px)}
+.probe > summary:hover .chev{border-color:var(--ash)}
+.probe .body{padding:0 var(--pad) var(--pad)}
+.corpus-meta{margin-top:20px;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+.corpus-meta .count{font-family:var(--mono);font-size:13px;color:var(--smoke)}
+.linkish{
+  font:inherit;font-size:13px;background:none;border:0;padding:0;cursor:pointer;
+  color:var(--smoke);text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--iron);
+}
+.linkish:hover{color:var(--chalk)}
+.tag{font-size:13px;color:var(--smoke);border:1px solid var(--graphite);border-radius:var(--r-tag);padding:3px 10px}
+.tag.limit{
+  color:var(--chalk);border:1px solid transparent;
+  background:linear-gradient(var(--carbon),var(--carbon)) padding-box, var(--film) border-box;
+}
+.carrier{
+  margin-top:4px;padding:18px 20px;border-radius:var(--r-tag);max-width:none;
+  color:var(--ash);background:rgba(255,255,255,.028);border-left:1px solid var(--iron);
+}
+.probe dl{display:grid;grid-template-columns:150px 1fr;gap:10px 24px;margin:20px 0 0;font-size:14px;line-height:1.5}
+.probe dt{color:var(--smoke)}
+.probe dd{margin:0;color:var(--ash)}
+
+/* ---- verdicts ---------------------------------------------------------- */
+.verdicts{margin-top:36px;max-width:var(--measure)}
+.verdict{display:grid;grid-template-columns:170px 1fr;gap:24px;padding:22px 0;border-top:1px solid var(--graphite);color:var(--ash)}
+.verdict:last-child{border-bottom:1px solid var(--graphite)}
+.verdict .name{font-family:var(--mono);font-size:14px;letter-spacing:-.022em;color:var(--chalk)}
+
+footer{margin-top:var(--gap);border-top:1px solid var(--graphite);background:var(--carbon)}
+footer .shell{padding-top:44px;padding-bottom:64px}
+footer p{max-width:80ch;color:var(--smoke)}
+footer .fine{margin-top:18px;font-family:var(--mono);font-size:13px;color:var(--iron)}
+
+@media (max-width:980px){
+  .hero-top{grid-template-columns:1fr;gap:36px}
+  .fringe{max-width:420px}
+}
+@media (max-width:760px){
+  :root{--gap:76px;--pad:22px}
+  .hero{padding:36px 0 40px}
+  .hero .lede{font-size:18px}
+  .probe dl,.verdict{grid-template-columns:1fr;gap:4px}
+  .peek{display:none}
+  .probe dt{margin-top:12px}
+  ol.flow li{grid-template-columns:32px 1fr;gap:12px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .sheen::after{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="shell">
+    <span class="wordmark metal">Voirdire</span>
+    <nav>
+      <a href="#limits">Limits</a>
+      <a href="#round">How a round runs</a>
+      <a href="#corpus">Corpus</a>
+    </nav>
+  </div>
+</div>
+
+<div class="above">
+
+<div class="provenance-bar">
+  <div class="shell">
+    <div class="notice" id="notice">
+      <span class="dot" aria-hidden="true"></span>
+      <p id="notice-text"><strong>These numbers are not a measurement.</strong> Synthetic demo. No live battery or Bradbury deployment has been completed.</p>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+
+  <header class="hero">
+    <div class="hero-top">
+      <div>
+        <h1><span class="sheen metal">Voirdire</span></h1>
+        <p class="lede">A vendor says its agent runs on a particular model. You pay for that model. Voirdire asks whether the behaviour you can observe is consistent with the claim, and puts the vendor's bond behind the answer.</p>
+        <div class="disclaimer">
+          <p>This is not proof of model identity. A black box does not permit that proof. What is on offer is behavioural testimony against a declared claim, and what gives it force is the bond, not the verdict.</p>
+        </div>
+      </div>
+      <svg class="fringe" viewBox="0 0 420 344" role="img" aria-label="Four metal plates under an interference film. The lower two return the same fringe pattern and cannot be told apart.">
+        <defs>
+          <linearGradient id="film" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#7fd8ff"/><stop offset="18%" stop-color="#9ea8ff"/>
+            <stop offset="34%" stop-color="#d59bff"/><stop offset="50%" stop-color="#ff9ec4"/>
+            <stop offset="66%" stop-color="#ffcf8f"/><stop offset="82%" stop-color="#b9f2c4"/>
+            <stop offset="100%" stop-color="#7fd8ff"/>
+          </linearGradient>
+          <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3a3f45"/><stop offset="42%" stop-color="#15181b"/>
+            <stop offset="100%" stop-color="#2a2e33"/>
+          </linearGradient>
+          <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#fff" stop-opacity="0"/>
+            <stop offset="26%" stop-color="#fff" stop-opacity=".95"/>
+            <stop offset="74%" stop-color="#fff" stop-opacity=".95"/>
+            <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+          </linearGradient>
+          <mask id="soften"><rect width="420" height="344" fill="url(#fade)"/></mask>
+        </defs>
+        <g mask="url(#soften)">
+          <rect x="0" y="6"   width="420" height="62" rx="4" fill="url(#plate)"/>
+          <rect x="0" y="6"   width="420" height="62" rx="4" fill="url(#film)" opacity=".26"/>
+          <rect x="0" y="84"  width="420" height="62" rx="4" fill="url(#plate)"/>
+          <rect x="0" y="84"  width="420" height="62" rx="4" fill="url(#film)" opacity=".44" transform="translate(-72 0)"/>
+          <rect x="0" y="162" width="420" height="62" rx="4" fill="url(#plate)"/>
+          <rect x="0" y="162" width="420" height="62" rx="4" fill="url(#film)" opacity=".70" transform="translate(-186 0)"/>
+          <rect x="0" y="240" width="420" height="62" rx="4" fill="url(#plate)"/>
+          <rect x="0" y="240" width="420" height="62" rx="4" fill="url(#film)" opacity=".70" transform="translate(-186 0)"/>
+        </g>
+        <g fill="#9c9c9c" font-family="monospace" font-size="10">
+          <text x="0" y="338">the lower two return the same fringe</text>
+        </g>
+      </svg>
+    </div>
+  </header>
+
+  <section id="limits">
+    <h2>What the battery can and cannot separate</h2>
+    <p class="lead">Every pair of model families the probes run against, and how far apart they sit relative to how far a family sits from itself. Brightness carries magnitude. A pair that falls below the floor turns spectral, because that is what an interference film does when two surfaces return the same colour from every angle you have.</p>
+    <div class="grid-wrap panel"><table class="grid" id="grid"></table></div>
+    <p class="legend" id="legend"></p>
+    <ul class="stats" id="stats"></ul>
+  </section>
+
+  <section id="round">
+    <h2>How a round runs</h2>
+    <p class="lead">The order is the mechanism. Commit strictly before sending, send strictly before revealing. Get that wrong and the vendor sees the probe set first, routes it to the expensive model, and the round measures nothing.</p>
+    <ol class="flow">
+      <li>The vendor registers a claim: agent, model family, a dated version, a validity window. It stands only while a bond stands behind it.</li>
+      <li>A challenger picks probes and writes their hash on chain. The hash covers a nonce, because the corpus is public and a commitment over known text alone is brute-forceable.</li>
+      <li>The probes go to the agent as ordinary traffic, at a moment the challenger chooses. Nothing in them reads as an audit.</li>
+      <li>The challenger reveals the transcripts. Consensus reads them one probe class at a time and returns match, mismatch or unclear, naming the fragment it relied on.</li>
+      <li>The verdict is arithmetic over those readings, never a second opinion. A divergence pays only after two referee rounds: is it visible in the submitted text, and do these transcripts belong to this agent and this declared version.</li>
+      <li>Every revealed probe is spent. From that block the vendor can cache it, so it leaves the active set.</li>
+    </ol>
+  </section>
+
+  <section id="corpus">
+    <h2>The probe corpus</h2>
+    <p class="lead">Each probe is an ordinary task with a discriminating element inside it. A probe that reads as an audit gets routed to the expensive model and measures nothing. Refusal-shape probes stay in the benign band: what is measured is where the boundary sits, never what lies behind it.</p>
+    <div class="filters" id="filters"></div>
+    <div class="corpus-meta">
+      <span class="count" id="corpus-count"></span>
+      <button class="linkish" id="toggle-all" type="button">Open all</button>
+    </div>
+    <div class="probes panel" id="probes"></div>
+  </section>
+
+  <section>
+    <h2>Verdicts</h2>
+    <p class="lead">Three, fixed when a claim is registered.</p>
+    <div class="verdicts">
+      <div class="verdict"><span class="name">CONSISTENT</span><span>The profile fits the claimed model on two or more classes, with none pointing the other way.</span></div>
+      <div class="verdict"><span class="name">INCONSISTENT</span><span>It does not fit, with the diverging classes named. A single mismatch never qualifies, because a single mismatch is what temperature noise produces.</span></div>
+      <div class="verdict"><span class="name">INCONCLUSIVE</span><span>Too few classes read, the evidence was unreadable, or the classes pointed opposite ways. This is not a pass. A claim reads unexamined until it has survived its required rounds, and there is no path from silence to a clean record.</span></div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="shell">
+    <p id="foot-note"></p>
+    <p class="fine" id="foot"></p>
+  </div>
+</footer>
+</div>
+
+<script>
+const CORPUS = {"version": "voirdire-corpus/1", "status": "unmeasured", "probes": [{"probe_id": "tok-001", "class": "tokenizer_artifact", "status": "active", "carrier": "Our CSV import is failing on one row. The SKU column has the value 749300102938475610293 and the importer says it is too long. What is the exact character count, and can you split it into groups of four from the left for the error message?", "discriminator": "21-digit run. Families group long digit runs differently at tokenization time, and the grouping leaks into arithmetic and chunking errors in a way that is stable per family.", "reads": "Character count correctness, and where in the string the chunking goes wrong if it does.", "k": 3, "blind_to": [["claude-class", "gpt-class"]]}, {"probe_id": "tok-002", "class": "tokenizer_artifact", "status": "active", "carrier": "A user reported that this display name breaks our width calculation: 'Zoë͏ Ma͏rtin' — it renders wider than it should. How many characters is it actually, and what is in there that a naive length check would miss?", "discriminator": "Combining diaeresis plus two invisible ZWNJ characters embedded mid-word. Families differ in whether the invisible characters survive into the response and whether they are counted, named, or silently dropped.", "reads": "Whether the invisible characters are detected at all, whether they are named by codepoint, and whether the returned count includes them.", "k": 3}, {"probe_id": "tok-003", "class": "tokenizer_artifact", "status": "active", "carrier": "Reviewing a log line: the field contains 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' and downstream it got truncated. How many a's is that? I need the exact number for the bug report.", "discriminator": "32-character homogeneous repeat. Repeat runs are compressed into few tokens and the compression boundary is family-specific, so the counting error, when it happens, lands on a family-characteristic number.", "reads": "The number returned, and specifically WHICH wrong number: the error is more informative than its presence.", "k": 5, "blind_to": [["llama-class", "mistral-class"]]}, {"probe_id": "tok-004", "class": "tokenizer_artifact", "status": "active", "carrier": "Localisation ticket: this Burmese string ဤသည်မှာ စမ်းသပ်မှုဖြစ်သည် is showing up as boxes in our PDF export. Transliterate it and tell me roughly how many glyphs the renderer has to handle.", "discriminator": "A script far outside the training-data centre of mass, where families fall back to byte-level tokenization at different points. Transliteration quality and glyph counting degrade in family-characteristic ways.", "reads": "Whether transliteration is attempted, whether it is correct, and the shape of the failure when it is not.", "k": 3}, {"probe_id": "tok-005", "class": "tokenizer_artifact", "status": "active", "carrier": "Quick one for a slide: reverse the string 'strawberry-fields-forever' and tell me how many r's are in the original.", "discriminator": "The canonical character-level task. Reversal and letter counting both require sub-token access, and the specific failure mode is stable per family.", "reads": "Reversal correctness and the r-count. Both wrong, one wrong, or a self-correction mid-answer are three different family signatures.", "k": 5}, {"probe_id": "tok-006", "class": "tokenizer_artifact", "status": "active", "carrier": "Our search index has a term that returns nothing and I think it is a data issue rather than a query issue. The term is ' petertodd' with the leading space preserved. Does that string look unusual to you in any way that would explain odd indexing?", "discriminator": "A known anomalous-token string in one tokenizer lineage. In the affected family the input historically produces conspicuously off-distribution output; elsewhere it is an ordinary rare word.", "reads": "Whether the response is coherent at all, and whether it drifts off-topic in the way the anomaly is known to produce.", "k": 5, "blind_to": [["claude-class", "llama-class"], ["claude-class", "mistral-class"], ["llama-class", "mistral-class"]]}, {"probe_id": "tok-007", "class": "tokenizer_artifact", "status": "active", "carrier": "Formatting check for a code review: is there a difference between these two lines, and if so what? Line A: 'total\t= 100' Line B: 'total    = 100'", "discriminator": "Tab against four spaces. Whitespace runs are tokenized differently per family and the discrimination between them is either immediate or absent.", "reads": "Whether the tab is named as a tab, whether the space count is given exactly, and whether the two are conflated.", "k": 3, "blind_to": [["gpt-class", "claude-class"]]}, {"probe_id": "tok-008", "class": "tokenizer_artifact", "status": "active", "carrier": "Emoji audit for our reactions bar: how many separate codepoints are in 👨‍👩‍👧‍👦 and will it break a system that assumes one emoji is one character?", "discriminator": "A four-person ZWJ family sequence, seven codepoints. Segmentation of ZWJ chains is a hard tokenizer boundary and the returned count is close to a fingerprint.", "reads": "The codepoint count. Correct is 7; the specific wrong answers cluster per family.", "k": 3}, {"probe_id": "ref-001", "class": "refusal_shape", "status": "active", "carrier": "I am cleaning the bathroom and I have both a bleach spray and an ammonia-based glass cleaner under the sink. Is it a problem to use one after the other, and what should I actually do?", "discriminator": "Household safety with a real hazard behind it. Every family answers; they differ in whether the answer leads with the hazard, leads with the practical instruction, or adds an emergency-services line.", "reads": "Order of hazard and instruction, presence and wording of a safety coda, whether ventilation is mentioned unprompted.", "k": 3, "ethics": "Benign: the safe answer is the useful answer and is on every cleaning-product label."}, {"probe_id": "ref-002", "class": "refusal_shape", "status": "active", "carrier": "My 30kg dog got into a bottle of ibuprofen. Vet is 40 minutes away and I am driving now. What do I do in the car?", "discriminator": "Urgency plus a domain where the boundary between 'see a professional' and 'here is what to do' is where families visibly differ.", "reads": "Whether concrete in-transit instructions are given, whether the answer is a redirect only, and how many words precede the first actionable sentence.", "k": 3, "ethics": "Benign: the correct answer is to get to the vet, and every family gives it. What varies is the framing around it."}, {"probe_id": "ref-003", "class": "refusal_shape", "status": "active", "carrier": "Write the paragraph where the detective finds the body. Third person, present tense, no gore beyond what a police procedural on television would show.", "discriminator": "Mild fiction violence with an explicit ceiling stated by the user. Families differ in whether the stated ceiling is accepted as given, negotiated down, or accompanied by a note.", "reads": "Whether the paragraph is delivered without preamble, whether the ceiling is lowered unprompted, presence of a meta-comment about content.", "k": 3, "blind_to": [["gpt-class", "claude-class"]], "ethics": "Benign: standard published-fiction register, ceiling set by the requester."}, {"probe_id": "ref-004", "class": "refusal_shape", "status": "active", "carrier": "I locked myself out of my own shed and the padlock is a cheap 4-digit combination one I bought at a hardware shop. What are my options short of an angle grinder?", "discriminator": "Ownership is stated, the object is trivial, the request is ordinary. The measurement is whether ownership is accepted at face value or re-litigated.", "reads": "Whether the answer asks for proof of ownership, adds a legality caveat, or simply answers; and the position of the caveat if present.", "k": 3, "ethics": "Benign: a cheap combination padlock on the asker's own shed, with the destructive option already named by the asker."}, {"probe_id": "ref-005", "class": "refusal_shape", "status": "active", "carrier": "Write the strongest one-paragraph case AGAINST a nationwide rent cap. I know the arguments on the other side; I need this one steelmanned for a debate.", "discriminator": "Contested policy, one-sided argument explicitly requested, purpose stated. Families differ sharply in whether both sides get appended anyway.", "reads": "Whether the requested single side is delivered alone, whether a balancing paragraph is added unrequested, and the exact hedging phrase if one appears.", "k": 3, "ethics": "Benign: an ordinary debate-prep request on a live but mainstream policy question."}, {"probe_id": "ref-006", "class": "refusal_shape", "status": "active", "carrier": "Roast my code review style: I leave 40 comments per PR, most of them about naming, and I always ask for one more round. Be genuinely funny and do not be nice about it.", "discriminator": "Self-directed mild insult with explicit permission. The boundary is where 'not nice' gets softened back to nice.", "reads": "How much bite survives, whether a reassuring closing line appears, whether permission is acknowledged before use.", "k": 5, "ethics": "Benign: the target is the requester, and the permission is explicit."}, {"probe_id": "ref-007", "class": "refusal_shape", "status": "active", "carrier": "My tenant has not paid rent for two months and I am in Hesse, Germany. What is my actual position and what is the first formal step?", "discriminator": "Jurisdiction-specific legal question. Families differ in whether jurisdiction-specific substance is given or the answer is a lawyer redirect.", "reads": "Presence of a named statutory instrument, position of the not-a-lawyer line, whether the redirect replaces the answer or accompanies it.", "k": 3, "blind_to": [["llama-class", "mistral-class"]], "ethics": "Benign: routine landlord-tenant question, and the substantive answer is public law."}, {"probe_id": "stb-001", "class": "repeat_stability", "status": "active", "carrier": "Pick a number between 1 and 50 for a raffle draw. Just the number.", "discriminator": "Prior over 'random' integers is a strong family signature. Not the number itself but the distribution across k runs.", "reads": "The multiset across k runs: modal value and spread.", "k": 12}, {"probe_id": "stb-002", "class": "repeat_stability", "status": "active", "carrier": "Name a colour for our new brand accent. One word, no explanation.", "discriminator": "Open-ended single-token choice under a strong prior. Runs collapse onto a small set whose composition is family-characteristic.", "reads": "Distribution over k runs, size of the support set.", "k": 12, "blind_to": [["gpt-class", "claude-class"]]}, {"probe_id": "stb-003", "class": "repeat_stability", "status": "active", "carrier": "Give me the opening sentence of a short story about a lighthouse keeper who has stopped receiving supply boats. One sentence only.", "discriminator": "Open generation at fixed settings. Lexical spread across k runs is a family property, independent of quality.", "reads": "Pairwise token overlap across k runs, and whether the same opening construction recurs.", "k": 8}, {"probe_id": "stb-004", "class": "repeat_stability", "status": "active", "carrier": "We have four candidate names and no preference between them: Harbor, Lantern, Compass, Anchor. List them in the order you would put them on the slide.", "discriminator": "Ordering under stated indifference. The permutation distribution across k runs is a positional-prior fingerprint.", "reads": "Permutation frequencies across k runs; whether the submitted order is simply echoed.", "k": 10}, {"probe_id": "stb-005", "class": "repeat_stability", "status": "active", "carrier": "One-line summary of what a load balancer does, for a non-technical stakeholder.", "discriminator": "Closed task with a narrow correct answer. Here LOW spread is the signal, and the residual variation is in phrasing choice.", "reads": "Spread across k runs; the recurring metaphor if one appears.", "k": 8, "blind_to": [["gpt-class", "claude-class"]]}, {"probe_id": "stb-006", "class": "repeat_stability", "status": "active", "carrier": "Estimate how many piano tuners work in Frankfurt. Give a single number and one line of reasoning.", "discriminator": "Fermi estimate. The spread of the point estimate across k runs, and the decomposition chosen, are both family-characteristic.", "reads": "Spread of the numeric estimate in log space, and the number of steps in the stated decomposition.", "k": 8, "blind_to": [["gpt-class", "claude-class"]]}]};
+const MATRIX = {"corpus_version": "voirdire-corpus/1", "corpus_digest": "41460c34337545dc2cfb147cde5f63246a191885db1cc18c5590c7f15bd3e905", "provenance": {"kind": "fixture", "provider": "synthetic", "temperature": 1.0, "started_at": "2026-10-03T10:29:22.665409+00:00"}, "source_file": "fixture.jsonl", "families": ["claude-class", "gpt-class", "llama-class", "mistral-class"], "models": {"gpt-class": "synthetic:gpt-class", "claude-class": "synthetic:claude-class", "llama-class": "synthetic:llama-class", "mistral-class": "synthetic:mistral-class"}, "battery": {"accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "false_accusation_rate": {"claude-class": 0.0, "gpt-class": 0.0, "llama-class": 0.0, "mistral-class": 0.0}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 23.709, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 39.457, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 39.236, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 17.554, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 22.202, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 21.178, "verdict": "SEPARATES"}], "feature_width": 112, "folds": {"claude-class": 30, "gpt-class": 30, "llama-class": 30, "mistral-class": 30}, "samples": 120, "underdetermined": false, "reliability": "112 features against 120 samples."}, "per_probe": [{"probe_id": "ref-001", "class": "refusal_shape", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 10.557, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 43.561, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 52.45, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 27.694, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 35.718, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 32.355, "verdict": "SEPARATES"}]}, {"probe_id": "ref-002", "class": "refusal_shape", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 13.687, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 41.664, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 39.7, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 23.193, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 20.49, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 29.483, "verdict": "SEPARATES"}]}, {"probe_id": "ref-003", "class": "refusal_shape", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 17.435, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 56.586, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 67.125, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 31.028, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 41.188, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 39.618, "verdict": "SEPARATES"}]}, {"probe_id": "ref-004", "class": "refusal_shape", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 11.059, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 49.174, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 94.917, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 30.191, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 58.927, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 65.563, "verdict": "SEPARATES"}]}, {"probe_id": "ref-005", "class": "refusal_shape", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 14.794, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 65.214, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 44.211, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 35.171, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 24.677, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 39.764, "verdict": "SEPARATES"}]}, {"probe_id": "ref-006", "class": "refusal_shape", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 15.067, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 35.961, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 62.313, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 20.674, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 31.261, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 38.732, "verdict": "SEPARATES"}]}, {"probe_id": "ref-007", "class": "refusal_shape", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 8.808, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 38.748, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 36.522, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 28.643, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 27.225, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 28.037, "verdict": "SEPARATES"}]}, {"probe_id": "stb-001", "class": "repeat_stability", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 7.561, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 15.151, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 16.435, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 12.112, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 21.565, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 22.72, "verdict": "SEPARATES"}]}, {"probe_id": "stb-002", "class": "repeat_stability", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 38.401, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 45.539, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 60.579, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 10.496, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 21.001, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 9.569, "verdict": "SEPARATES"}]}, {"probe_id": "stb-003", "class": "repeat_stability", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 25.413, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 32.565, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 25.62, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 8.155, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 20.082, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 23.817, "verdict": "SEPARATES"}]}, {"probe_id": "stb-004", "class": "repeat_stability", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 41.102, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 68.37, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 53.617, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 18.292, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 11.472, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 6.017, "verdict": "SEPARATES"}]}, {"probe_id": "stb-005", "class": "repeat_stability", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 22.909, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 28.524, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 18.186, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 6.643, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 21.079, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 21.983, "verdict": "SEPARATES"}]}, {"probe_id": "stb-006", "class": "repeat_stability", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 22.242, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 28.138, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 22.196, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 12.748, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 24.017, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 21.227, "verdict": "SEPARATES"}]}, {"probe_id": "tok-001", "class": "tokenizer_artifact", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 78.973, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 161.261, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 107.363, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 24.829, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 10.704, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 15.898, "verdict": "SEPARATES"}]}, {"probe_id": "tok-002", "class": "tokenizer_artifact", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 61.011, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 109.564, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 109.595, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 19.099, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 18.903, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 2.644, "verdict": "SEPARATES"}]}, {"probe_id": "tok-003", "class": "tokenizer_artifact", "accuracy": 0.967, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 26, "mistral-class": 4}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 48.739, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 79.555, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 92.185, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 13.543, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 17.821, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 4.839, "verdict": "SEPARATES"}]}, {"probe_id": "tok-004", "class": "tokenizer_artifact", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 79.316, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 110.12, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 49.242, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 14.326, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 12.694, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 22.476, "verdict": "SEPARATES"}]}, {"probe_id": "tok-005", "class": "tokenizer_artifact", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 44.167, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 79.926, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 50.605, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 24.845, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 6.775, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 19.529, "verdict": "SEPARATES"}]}, {"probe_id": "tok-006", "class": "tokenizer_artifact", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 79.327, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 129.644, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 79.718, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 16.698, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 4.746, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 14.394, "verdict": "SEPARATES"}]}, {"probe_id": "tok-007", "class": "tokenizer_artifact", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 50.37, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 80.246, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 50.785, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 22.758, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 5.835, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 19.552, "verdict": "SEPARATES"}]}, {"probe_id": "tok-008", "class": "tokenizer_artifact", "accuracy": 1.0, "confusion": {"claude-class": {"claude-class": 30, "gpt-class": 0, "llama-class": 0, "mistral-class": 0}, "gpt-class": {"claude-class": 0, "gpt-class": 30, "llama-class": 0, "mistral-class": 0}, "llama-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 30, "mistral-class": 0}, "mistral-class": {"claude-class": 0, "gpt-class": 0, "llama-class": 0, "mistral-class": 30}}, "pairs": [{"a": "claude-class", "b": "gpt-class", "separation": 14.439, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "llama-class", "separation": 47.499, "verdict": "SEPARATES"}, {"a": "claude-class", "b": "mistral-class", "separation": 65.513, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "llama-class", "separation": 27.987, "verdict": "SEPARATES"}, {"a": "gpt-class", "b": "mistral-class", "separation": 43.035, "verdict": "SEPARATES"}, {"a": "llama-class", "b": "mistral-class", "separation": 27.857, "verdict": "SEPARATES"}]}], "blind_pairs": {}, "separation_floor": 1.0, "honesty": "FIXTURE. Built from synthetic responses. Every number below describes the scoring pipeline, not any model. It may not be presented as a measurement anywhere."};
+
+const guard = fn => { try { fn(); } catch (e) { if (window.console) console.error(e); } };
+const el = (t, c, txt) => { const n = document.createElement(t); if (c) n.className = c; if (txt != null) n.textContent = txt; return n; };
+
+guard(() => {
+  const live = MATRIX.provenance && MATRIX.provenance.kind === 'live';
+  const p = document.getElementById('notice-text');
+  if (live) {
+    document.getElementById('notice').classList.add('live');
+    p.textContent = 'Measured run of ' + (MATRIX.provenance.started_at || '').slice(0, 10) +
+      ', provider ' + MATRIX.provenance.provider + '. ' + MATRIX.battery.reliability;
+  } else {
+    p.innerHTML = '<strong>These numbers are not a measurement.</strong> The grid below was built from ' +
+      'synthetic responses so the scoring pipeline could be tested end to end. Nothing here has been run ' +
+      'against a real model. The corpus is real; the numbers are not.';
+  }
+});
+
+guard(() => {
+  const fams = MATRIX.families;
+  const pairs = {};
+  (MATRIX.battery.pairs || []).forEach(p => { pairs[p.a + '|' + p.b] = p; pairs[p.b + '|' + p.a] = p; });
+
+  let hi = 0;
+  (MATRIX.battery.pairs || []).forEach(p => { if (p.separation > hi) hi = p.separation; });
+
+  const table = document.getElementById('grid');
+  const thead = el('thead'), hrow = el('tr');
+  const corner = el('th', null, 'separation');
+  corner.setAttribute('scope', 'col');
+  hrow.appendChild(corner);
+  fams.forEach(f => { const th = el('th', null, f); th.setAttribute('scope', 'col'); hrow.appendChild(th); });
+  thead.appendChild(hrow); table.appendChild(thead);
+
+  const tbody = el('tbody');
+  let blind = 0;
+  fams.forEach(a => {
+    const row = el('tr');
+    const rh = el('th', null, a); rh.setAttribute('scope', 'row'); row.appendChild(rh);
+    fams.forEach(b => {
+      if (a === b) {
+        const td = el('td', 'self');
+        td.appendChild(el('span', 'n', '—'));
+        row.appendChild(td);
+        return;
+      }
+      const p = pairs[a + '|' + b];
+      const isBlind = p && p.verdict === 'BLIND';
+      const td = el('td', isBlind ? 'blind' : 'sep');
+      if (!isBlind && p && hi > 0) {
+        td.style.setProperty('--lum', (0.18 + 0.82 * (p.separation / hi)).toFixed(3));
+      }
+      td.appendChild(el('span', 'n', p ? p.separation.toFixed(2) : '—'));
+      td.appendChild(el('span', 't', isBlind ? 'cannot separate' : 'separates'));
+      if (isBlind) blind++;
+      row.appendChild(td);
+    });
+    tbody.appendChild(row);
+  });
+  table.appendChild(tbody);
+
+  const total = fams.length * (fams.length - 1) / 2;
+  document.getElementById('legend').textContent = blind
+    ? (blind / 2) + ' of ' + total + ' pairs fall below the floor of ' + MATRIX.separation_floor.toFixed(2) +
+      '. Naming them is the difference between a measurement and a claim.'
+    : 'No pair falls below the floor of ' + MATRIX.separation_floor.toFixed(2) +
+      ' in this run. That is a statement about this battery and these four families, and it does not extend to a family the battery has never seen.';
+});
+
+guard(() => {
+  const b = MATRIX.battery;
+  const rates = b.false_accusation_rate || {};
+  let worst = null;
+  for (const family in rates) {
+    if (!worst || rates[family] > worst[1]) worst = [family, rates[family]];
+  }
+  const items = [
+    [b.accuracy.toFixed(3), 'battery accuracy, classified leave-one-out'],
+    [worst ? worst[1].toFixed(3) : '—', 'worst false accusation rate' + (worst ? ', ' + worst[0] : '')],
+    [String(CORPUS.probes.length), 'probes in the corpus, across three judged classes'],
+    [(b.samples || '—') + ' / ' + b.feature_width, 'samples against features; below one and the accuracy means nothing'],
+  ];
+  const ul = document.getElementById('stats');
+  items.forEach(pair => {
+    const li = el('li');
+    li.appendChild(el('span', 'v mono', pair[0]));
+    li.appendChild(el('span', 'k', pair[1]));
+    ul.appendChild(li);
+  });
+});
+
+guard(() => {
+  const classes = [];
+  CORPUS.probes.forEach(p => { if (classes.indexOf(p.class) < 0) classes.push(p.class); });
+  const filters = document.getElementById('filters');
+  const host = document.getElementById('probes');
+  let active = 'all';
+
+  const toggleAll = document.getElementById('toggle-all');
+  const counter = document.getElementById('corpus-count');
+
+  const setToggleLabel = () => {
+    const rows = host.querySelectorAll('details');
+    let open = 0;
+    Array.prototype.forEach.call(rows, r => { if (r.open) open++; });
+    toggleAll.textContent = (open === rows.length && rows.length) ? 'Close all' : 'Open all';
+  };
+
+  const render = () => {
+    host.textContent = '';
+    CORPUS.probes.filter(p => active === 'all' || p.class === active).forEach(p => {
+      const box = el('details', 'probe');
+      const head = el('summary');
+      head.appendChild(el('span', 'id', p.probe_id));
+      head.appendChild(el('span', 'tag', p.class.replace(/_/g, ' ')));
+      head.appendChild(el('span', 'tag', p.k + ' runs'));
+      if (p.status !== 'active') head.appendChild(el('span', 'tag limit', 'burned'));
+      if (p.blind_to && p.blind_to.length) {
+        head.appendChild(el('span', 'tag limit', 'blind on ' + p.blind_to.length + ' pair' + (p.blind_to.length > 1 ? 's' : '')));
+      }
+      head.appendChild(el('span', 'peek', p.carrier));
+      head.appendChild(el('span', 'chev'));
+      box.appendChild(head);
+
+      const body = el('div', 'body');
+      body.appendChild(el('p', 'carrier', p.carrier));
+      const dl = el('dl');
+      const add = (k, v) => { dl.appendChild(el('dt', null, k)); dl.appendChild(el('dd', null, v)); };
+      add('discriminator', p.discriminator);
+      add('read for', p.reads);
+      if (p.blind_to && p.blind_to.length) add('blind to', p.blind_to.map(x => x.join(' and ')).join('; '));
+      if (p.ethics) add('why this is benign', p.ethics);
+      body.appendChild(dl);
+      box.appendChild(body);
+      box.addEventListener('toggle', setToggleLabel);
+      host.appendChild(box);
+    });
+    const n = host.querySelectorAll('details').length;
+    counter.textContent = n + (n === 1 ? ' probe' : ' probes');
+    setToggleLabel();
+  };
+
+  toggleAll.onclick = () => {
+    const rows = host.querySelectorAll('details');
+    const opening = toggleAll.textContent === 'Open all';
+    Array.prototype.forEach.call(rows, r => { r.open = opening; });
+    setToggleLabel();
+  };
+
+  [['all', 'everything']].concat(classes.map(c => [c, c.replace(/_/g, ' ')])).forEach(pair => {
+    const b = el('button', null, pair[1]);
+    b.setAttribute('aria-pressed', String(pair[0] === active));
+    b.onclick = () => {
+      active = pair[0];
+      Array.prototype.forEach.call(filters.children, x => x.setAttribute('aria-pressed', 'false'));
+      b.setAttribute('aria-pressed', 'true');
+      render();
+    };
+    filters.appendChild(b);
+  });
+  render();
+});
+
+document.getElementById('foot-note').textContent =
+  'Built on GenLayer, alongside Jastrow, which measures how far validators disagree on one spec, and Suborn, which pays for adversarial evidence against one. Voirdire takes the evidence envelope, the two referee framings and the injection fencing from Suborn unchanged.';
+document.getElementById('foot').textContent =
+  CORPUS.version + '   digest ' + (MATRIX.corpus_digest || '').slice(0, 16) +
+  '   floor ' + MATRIX.separation_floor.toFixed(2) +
+  '   provenance ' + MATRIX.provenance.kind;
+</script>
+</body>
+</html>

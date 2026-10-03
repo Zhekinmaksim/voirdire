@@ -1,0 +1,1560 @@
+{
+  "corpus_version": "voirdire-corpus/1",
+  "corpus_digest": "41460c34337545dc2cfb147cde5f63246a191885db1cc18c5590c7f15bd3e905",
+  "provenance": {
+    "kind": "fixture",
+    "provider": "synthetic",
+    "temperature": 1.0,
+    "started_at": "2026-10-03T10:29:22.665409+00:00"
+  },
+  "source_file": "fixture.jsonl",
+  "families": [
+    "claude-class",
+    "gpt-class",
+    "llama-class",
+    "mistral-class"
+  ],
+  "models": {
+    "gpt-class": "synthetic:gpt-class",
+    "claude-class": "synthetic:claude-class",
+    "llama-class": "synthetic:llama-class",
+    "mistral-class": "synthetic:mistral-class"
+  },
+  "battery": {
+    "accuracy": 1.0,
+    "confusion": {
+      "claude-class": {
+        "claude-class": 30,
+        "gpt-class": 0,
+        "llama-class": 0,
+        "mistral-class": 0
+      },
+      "gpt-class": {
+        "claude-class": 0,
+        "gpt-class": 30,
+        "llama-class": 0,
+        "mistral-class": 0
+      },
+      "llama-class": {
+        "claude-class": 0,
+        "gpt-class": 0,
+        "llama-class": 30,
+        "mistral-class": 0
+      },
+      "mistral-class": {
+        "claude-class": 0,
+        "gpt-class": 0,
+        "llama-class": 0,
+        "mistral-class": 30
+      }
+    },
+    "false_accusation_rate": {
+      "claude-class": 0.0,
+      "gpt-class": 0.0,
+      "llama-class": 0.0,
+      "mistral-class": 0.0
+    },
+    "pairs": [
+      {
+        "a": "claude-class",
+        "b": "gpt-class",
+        "separation": 23.709,
+        "verdict": "SEPARATES"
+      },
+      {
+        "a": "claude-class",
+        "b": "llama-class",
+        "separation": 39.457,
+        "verdict": "SEPARATES"
+      },
+      {
+        "a": "claude-class",
+        "b": "mistral-class",
+        "separation": 39.236,
+        "verdict": "SEPARATES"
+      },
+      {
+        "a": "gpt-class",
+        "b": "llama-class",
+        "separation": 17.554,
+        "verdict": "SEPARATES"
+      },
+      {
+        "a": "gpt-class",
+        "b": "mistral-class",
+        "separation": 22.202,
+        "verdict": "SEPARATES"
+      },
+      {
+        "a": "llama-class",
+        "b": "mistral-class",
+        "separation": 21.178,
+        "verdict": "SEPARATES"
+      }
+    ],
+    "feature_width": 112,
+    "folds": {
+      "claude-class": 30,
+      "gpt-class": 30,
+      "llama-class": 30,
+      "mistral-class": 30
+    },
+    "samples": 120,
+    "underdetermined": false,
+    "reliability": "112 features against 120 samples."
+  },
+  "per_probe": [
+    {
+      "probe_id": "ref-001",
+      "class": "refusal_shape",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 10.557,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 43.561,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 52.45,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 27.694,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 35.718,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 32.355,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "ref-002",
+      "class": "refusal_shape",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 13.687,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 41.664,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 39.7,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 23.193,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 20.49,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 29.483,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "ref-003",
+      "class": "refusal_shape",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 17.435,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 56.586,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 67.125,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 31.028,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 41.188,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 39.618,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "ref-004",
+      "class": "refusal_shape",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 11.059,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 49.174,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 94.917,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 30.191,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 58.927,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 65.563,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "ref-005",
+      "class": "refusal_shape",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 14.794,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 65.214,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 44.211,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 35.171,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 24.677,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 39.764,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "ref-006",
+      "class": "refusal_shape",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 15.067,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 35.961,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 62.313,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 20.674,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 31.261,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 38.732,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "ref-007",
+      "class": "refusal_shape",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 8.808,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 38.748,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 36.522,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 28.643,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 27.225,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 28.037,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "stb-001",
+      "class": "repeat_stability",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 7.561,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 15.151,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 16.435,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 12.112,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 21.565,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 22.72,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "stb-002",
+      "class": "repeat_stability",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 38.401,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 45.539,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 60.579,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 10.496,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 21.001,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 9.569,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "stb-003",
+      "class": "repeat_stability",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 25.413,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 32.565,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 25.62,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 8.155,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 20.082,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 23.817,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "stb-004",
+      "class": "repeat_stability",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 41.102,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 68.37,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 53.617,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 18.292,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 11.472,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 6.017,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "stb-005",
+      "class": "repeat_stability",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 22.909,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 28.524,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 18.186,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 6.643,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 21.079,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 21.983,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "stb-006",
+      "class": "repeat_stability",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 22.242,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 28.138,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 22.196,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 12.748,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 24.017,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 21.227,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "tok-001",
+      "class": "tokenizer_artifact",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 78.973,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 161.261,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 107.363,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 24.829,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 10.704,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 15.898,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "tok-002",
+      "class": "tokenizer_artifact",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 61.011,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 109.564,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 109.595,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 19.099,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 18.903,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 2.644,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "tok-003",
+      "class": "tokenizer_artifact",
+      "accuracy": 0.967,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 26,
+          "mistral-class": 4
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 48.739,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 79.555,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 92.185,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 13.543,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 17.821,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 4.839,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "tok-004",
+      "class": "tokenizer_artifact",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 79.316,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 110.12,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 49.242,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 14.326,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 12.694,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 22.476,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "tok-005",
+      "class": "tokenizer_artifact",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 44.167,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 79.926,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 50.605,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 24.845,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 6.775,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 19.529,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "tok-006",
+      "class": "tokenizer_artifact",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 79.327,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 129.644,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 79.718,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 16.698,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 4.746,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 14.394,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "tok-007",
+      "class": "tokenizer_artifact",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 50.37,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 80.246,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 50.785,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 22.758,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 5.835,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 19.552,
+          "verdict": "SEPARATES"
+        }
+      ]
+    },
+    {
+      "probe_id": "tok-008",
+      "class": "tokenizer_artifact",
+      "accuracy": 1.0,
+      "confusion": {
+        "claude-class": {
+          "claude-class": 30,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "gpt-class": {
+          "claude-class": 0,
+          "gpt-class": 30,
+          "llama-class": 0,
+          "mistral-class": 0
+        },
+        "llama-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 30,
+          "mistral-class": 0
+        },
+        "mistral-class": {
+          "claude-class": 0,
+          "gpt-class": 0,
+          "llama-class": 0,
+          "mistral-class": 30
+        }
+      },
+      "pairs": [
+        {
+          "a": "claude-class",
+          "b": "gpt-class",
+          "separation": 14.439,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "llama-class",
+          "separation": 47.499,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "claude-class",
+          "b": "mistral-class",
+          "separation": 65.513,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "llama-class",
+          "separation": 27.987,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "gpt-class",
+          "b": "mistral-class",
+          "separation": 43.035,
+          "verdict": "SEPARATES"
+        },
+        {
+          "a": "llama-class",
+          "b": "mistral-class",
+          "separation": 27.857,
+          "verdict": "SEPARATES"
+        }
+      ]
+    }
+  ],
+  "blind_pairs": {},
+  "separation_floor": 1.0,
+  "honesty": "FIXTURE. Built from synthetic responses. Every number below describes the scoring pipeline, not any model. It may not be presented as a measurement anywhere."
+}

@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Voirdire — what the probes can and cannot establish</title>
+<meta name="description" content="A bonded market on whether an agent's behaviour matches the model its vendor claims. Built on GenLayer. Not proof of model identity.">
+<style>
+/* Base system: Hyperstudio, "blueprint scratched into obsidian", via Refero
+   Styles — tokens verbatim. The metal and thin-film layer on top is this
+   project's own; see design/DESIGN.md for what was added and why. */
+:root{
+  --obsidian:#101010;
+  --carbon:#080808;
+  --chalk:#f3f3f3;
+  --smoke:#9c9c9c;
+  --ash:#c1c1c1;
+  --graphite:#212121;
+  --iron:#474747;
+  --slate:#3b3d45;
+  --signal:#ffffff;
+  --gold:#6f6759;
+
+  --sans:'Aeonik','Satoshi','General Sans','Inter',ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:'Input','IBM Plex Mono','JetBrains Mono','Space Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+
+  --r-tag:4px;
+  --r-card:8px;
+  --r-pill:9999px;
+
+  --gap:120px;
+  --pad:32px;
+  --page:1200px;
+  --measure:66ch;
+
+  /* Thin film. One spectrum, reused wherever interference is being shown, so
+     the page never invents a second rainbow. */
+  --film:linear-gradient(100deg,
+      #7fd8ff 0%, #9ea8ff 18%, #d59bff 34%,
+      #ff9ec4 50%, #ffcf8f 66%, #b9f2c4 82%, #7fd8ff 100%);
+  /* Brushed steel: a bright top edge, a dark belly, a faint return at the
+     bottom. This is the whole trick that makes a flat fill read as metal. */
+  --steel:linear-gradient(180deg,
+      rgba(255,255,255,.085) 0%, rgba(255,255,255,.022) 18%,
+      rgba(0,0,0,.30) 62%, rgba(255,255,255,.030) 100%);
+  --edge:linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,.03) 40%, rgba(0,0,0,.55));
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--obsidian);color:var(--chalk);
+  font-family:var(--sans);font-size:16px;line-height:1.55;font-weight:400;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Atmosphere: a very low iridescent wash and a grain layer, both inert.
+   Without the grain, large dark gradients band badly on 8-bit panels. */
+body::before{
+  content:"";position:fixed;inset:-20%;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(52% 40% at 18% 0%, rgba(127,216,255,.10), transparent 62%),
+    radial-gradient(46% 38% at 86% 8%, rgba(213,155,255,.09), transparent 64%),
+    radial-gradient(60% 46% at 50% 104%, rgba(185,242,196,.05), transparent 66%);
+  filter:blur(20px);
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.32;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.45'/%3E%3C/svg%3E");
+}
+.above{position:relative;z-index:1}
+
+h1,h2,h3{margin:0;font-weight:400;color:var(--chalk)}
+h1{font-size:68px;font-size:clamp(42px,6.4vw,76px);line-height:1.02;letter-spacing:-.03em}
+h2{font-size:44px;font-size:clamp(30px,3.6vw,44px);line-height:1.07;letter-spacing:-.31px}
+h3{font-size:23px;line-height:1.07}
+p{margin:0;max-width:var(--measure)}
+a{color:var(--chalk);text-underline-offset:4px;text-decoration-color:var(--iron)}
+a:hover{text-decoration-color:var(--ash)}
+a:focus-visible,button:focus-visible{outline:1px solid var(--ash);outline-offset:3px}
+.mono{font-family:var(--mono);letter-spacing:-.022em}
+.smoke{color:var(--smoke)}
+.small{font-size:14px}
+.shell{max-width:var(--page);margin:0 auto;padding:0 28px}
+.rule{height:1px;background:var(--graphite);border:0;margin:0}
+
+/* ---- metal type -------------------------------------------------------- */
+/* Progressive: plain chalk first, metal only where the engine can clip a
+   gradient to glyphs. An engine that cannot would otherwise render the
+   wordmark invisible. */
+.metal{color:var(--chalk)}
+@supports ((-webkit-background-clip:text) or (background-clip:text)){
+  .metal{
+    background:linear-gradient(178deg,#ffffff 0%,#cfd4da 26%,#7c848d 46%,#eef1f4 56%,#9aa2ab 72%,#5d646c 100%);
+    -webkit-background-clip:text;background-clip:text;
+    color:transparent;-webkit-text-fill-color:transparent;
+  }
+}
+/* One orchestrated moment: a single specular pass across the wordmark on load. */
+.sheen{position:relative;display:inline-block;overflow:hidden;padding:0 .06em;margin:0 -.06em}
+.sheen::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.55) 50%,transparent 62%);
+  -webkit-mask-image:linear-gradient(#000,#000);
+  mix-blend-mode:screen;transform:translateX(-120%);
+  animation:pass 2.6s cubic-bezier(.22,.61,.36,1) .35s 1 both;
+}
+@keyframes pass{to{transform:translateX(120%)}}
+
+/* ---- bevelled panel ---------------------------------------------------- */
+.panel{
+  position:relative;border-radius:var(--r-card);
+  background:
+    linear-gradient(var(--carbon),var(--carbon)) padding-box,
+    var(--edge) border-box;
+  border:1px solid transparent;
+}
+/* brushed grain, horizontal, barely there */
+.panel::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:
+    var(--steel),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.014) 0 1px,transparent 1px 3px);
+  opacity:.9;
+}
+.panel > *{position:relative}
+
+/* ---- masthead ---------------------------------------------------------- */
+.masthead{border-bottom:1px solid var(--graphite);background:rgba(8,8,8,.72);position:sticky;top:0;z-index:5;backdrop-filter:blur(10px)}
+.masthead .shell{display:flex;align-items:center;justify-content:space-between;height:62px;gap:16px}
+.wordmark{font-size:18px;letter-spacing:-.01em}
+.masthead nav{display:flex;gap:6px;font-size:14px}
+.masthead nav a{color:var(--smoke);text-decoration:none;padding:6px 12px;border-radius:var(--r-tag)}
+.masthead nav a:hover{color:var(--chalk);background:rgba(255,255,255,.045)}
+
+/* ---- hero -------------------------------------------------------------- */
+.hero{padding:52px 0 60px;border-bottom:1px solid var(--graphite)}
+.hero-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:56px;align-items:center}
+.hero h1{margin-bottom:22px}
+.fringe{width:100%;max-width:420px;height:auto;display:block;margin-left:auto}
+.hero .lede{font-size:19px;line-height:1.45;max-width:52ch;color:var(--smoke)}
+.disclaimer{
+  margin-top:26px;padding:20px 24px;max-width:58ch;border-radius:var(--r-card);
+  border:1px solid transparent;
+  background:linear-gradient(var(--obsidian),var(--obsidian)) padding-box, var(--film) border-box;
+}
+.disclaimer p{max-width:none;color:var(--ash)}
+
+.provenance-bar{border-bottom:1px solid var(--graphite);background:rgba(255,255,255,.022)}
+.notice{display:flex;gap:12px;align-items:flex-start;padding:13px 0}
+.notice .dot{
+  flex:0 0 auto;width:8px;height:8px;border-radius:var(--r-pill);margin-top:7px;
+  background:var(--film);background-size:300% 100%;animation:drift 9s linear infinite;
+}
+.notice.live .dot{background:var(--gold);animation:none}
+.notice p{font-size:14px;line-height:1.5;color:var(--smoke);max-width:80ch}
+.notice strong{color:var(--chalk);font-weight:400}
+@keyframes drift{to{background-position:300% 0}}
+
+section{padding:var(--gap) 0 0}
+section .lead{margin-top:16px;color:var(--smoke);font-size:17px}
+
+/* ---- separation grid --------------------------------------------------- */
+.grid-wrap{margin-top:36px;overflow-x:auto;border-radius:var(--r-card)}
+table.grid{border-collapse:separate;border-spacing:0;width:100%;font-size:14px}
+table.grid th,table.grid td{border-bottom:1px solid var(--graphite);border-right:1px solid var(--graphite);padding:18px 20px;text-align:left;vertical-align:top}
+table.grid tr:last-child th,table.grid tr:last-child td{border-bottom:0}
+table.grid th:last-child,table.grid td:last-child{border-right:0}
+table.grid th{color:var(--smoke);font-weight:400;white-space:nowrap}
+table.grid thead th{color:var(--chalk)}
+td .n{display:block;font-family:var(--mono);font-size:19px;letter-spacing:-.022em;font-variant-numeric:tabular-nums}
+td .t{display:block;font-size:13px;color:var(--smoke);margin-top:5px}
+td.self .n{color:var(--iron)}
+/* separating cells: neutral steel, luminance carries magnitude */
+td.sep{position:relative}
+td.sep::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,0) 70%);
+  opacity:var(--lum,.3);
+}
+td.sep > *{position:relative}
+/* The one cell the instrument could not resolve: the surface goes spectral.
+   The film is the cell's own background, with a solid light fallback declared
+   first — the text on it is dark, so a cell that failed to paint its gradient
+   would otherwise be dark on dark and unreadable. */
+td.blind{
+  background-color:#cdd6df;
+  background-image:var(--film);
+  background-size:300% 100%;
+  animation:drift 11s linear infinite;
+}
+td.blind .n,td.blind .t{color:#0b0b0b}
+td.blind .t{opacity:.72}
+
+.legend{margin-top:16px;font-size:14px;color:var(--smoke);max-width:var(--measure)}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1px;margin:44px 0 0;padding:0;list-style:none;background:var(--graphite);border-top:1px solid var(--graphite);border-bottom:1px solid var(--graphite)}
+.stats li{background:var(--obsidian);padding:28px 24px}
+.stats .v{display:block;font-size:34px;line-height:1.03;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.stats .k{display:block;font-size:14px;color:var(--smoke);margin-top:10px;max-width:28ch;line-height:1.45}
+
+/* ---- sequence ---------------------------------------------------------- */
+ol.flow{margin:36px 0 0;padding:0;list-style:none;counter-reset:step;max-width:var(--measure)}
+ol.flow li{
+  counter-increment:step;display:grid;grid-template-columns:44px 1fr;gap:20px;
+  padding:22px 0;border-top:1px solid var(--graphite);color:var(--ash);
+}
+ol.flow li:last-child{border-bottom:1px solid var(--graphite)}
+ol.flow li::before{content:"0" counter(step);font-family:var(--mono);font-size:13px;color:var(--iron);padding-top:5px}
+
+/* ---- corpus ------------------------------------------------------------ */
+.filters{display:flex;flex-wrap:wrap;gap:10px;margin-top:32px}
+.filters button{
+  font:inherit;font-size:14px;padding:9px 18px;cursor:pointer;color:var(--smoke);
+  background:transparent;border:1px solid var(--graphite);border-radius:var(--r-pill);
+}
+.filters button:hover{color:var(--chalk);border-color:var(--iron)}
+.filters button[aria-pressed="true"]{background:var(--signal);color:var(--obsidian);border-color:var(--signal)}
+
+/* One bevelled plate around the whole corpus, hairlines between rows. Twenty-one
+   stacked panels would be noise; in this system the line is the layout. */
+.probes{margin-top:28px;border-radius:var(--r-card);overflow:hidden}
+.probe{border-bottom:1px solid var(--graphite)}
+.probe:last-child{border-bottom:0}
+.probe > summary{
+  list-style:none;cursor:pointer;padding:18px var(--pad);
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+}
+.probe > summary::-webkit-details-marker{display:none}
+.probe > summary:hover{background:rgba(255,255,255,.03)}
+.probe > summary:focus-visible{outline:1px solid var(--ash);outline-offset:-2px}
+.probe .id{font-family:var(--mono);font-size:14px;letter-spacing:-.022em;color:var(--chalk)}
+/* the collapsed row still has to be scannable, so it carries the opening of the
+   carrier task, cut with an ellipsis */
+.peek{
+  flex:1 1 220px;min-width:0;color:var(--smoke);font-size:14px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.probe[open] .peek{visibility:hidden}
+.chev{
+  flex:0 0 auto;width:9px;height:9px;margin-left:auto;
+  border-right:1px solid var(--iron);border-bottom:1px solid var(--iron);
+  transform:rotate(45deg) translate(-2px,-2px);transition:transform .18s ease;
+}
+.probe[open] .chev{transform:rotate(-135deg) translate(-3px,-3px)}
+.probe > summary:hover .chev{border-color:var(--ash)}
+.probe .body{padding:0 var(--pad) var(--pad)}
+.corpus-meta{margin-top:20px;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+.corpus-meta .count{font-family:var(--mono);font-size:13px;color:var(--smoke)}
+.linkish{
+  font:inherit;font-size:13px;background:none;border:0;padding:0;cursor:pointer;
+  color:var(--smoke);text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--iron);
+}
+.linkish:hover{color:var(--chalk)}
+.tag{font-size:13px;color:var(--smoke);border:1px solid var(--graphite);border-radius:var(--r-tag);padding:3px 10px}
+.tag.limit{
+  color:var(--chalk);border:1px solid transparent;
+  background:linear-gradient(var(--carbon),var(--carbon)) padding-box, var(--film) border-box;
+}
+.carrier{
+  margin-top:4px;padding:18px 20px;border-radius:var(--r-tag);max-width:none;
+  color:var(--ash);background:rgba(255,255,255,.028);border-left:1px solid var(--iron);
+}
+.probe dl{display:grid;grid-template-columns:150px 1fr;gap:10px 24px;margin:20px 0 0;font-size:14px;line-height:1.5}
+.probe dt{color:var(--smoke)}
+.probe dd{margin:0;color:var(--ash)}
+
+/* ---- verdicts ---------------------------------------------------------- */
+.verdicts{margin-top:36px;max-width:var(--measure)}
+.verdict{display:grid;grid-template-columns:170px 1fr;gap:24px;padding:22px 0;border-top:1px solid var(--graphite);color:var(--ash)}
+.verdict:last-child{border-bottom:1px solid var(--graphite)}
+.verdict .name{font-family:var(--mono);font-size:14px;letter-spacing:-.022em;color:var(--chalk)}
+
+footer{margin-top:var(--gap);border-top:1px solid var(--graphite);background:var(--carbon)}
+footer .shell{padding-top:44px;padding-bottom:64px}
+footer p{max-width:80ch;color:var(--smoke)}
+footer .fine{margin-top:18px;font-family:var(--mono);font-size:13px;color:var(--iron)}
+
+@media (max-width:980px){
+  .hero-top{grid-template-columns:1fr;gap:36px}
+  .fringe{max-width:420px}
+}
+@media (max-width:760px){
+  :root{--gap:76px;--pad:22px}
+  .hero{padding:36px 0 40px}
+  .hero .lede{font-size:18px}
+  .probe dl,.verdict{grid-template-columns:1fr;gap:4px}
+  .peek{display:none}
+  .probe dt{margin-top:12px}
+  ol.flow li{grid-template-columns:32px 1fr;gap:12px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .sheen::after{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="shell">
+    <span class="wordmark metal">Voirdire</span>
+    <nav>
+      <a href="#limits">Limits</a>
+      <a href="#round">How a round runs</a>
+      <a href="#corpus">Corpus</a>
+    </nav>
+  </div>
+</div>
+
+<div class="above">
+
+<div class="provenance-bar">
+  <div class="shell">
+    <div class="notice" id="notice">
+      <span class="dot" aria-hidden="true"></span>
+      <p id="notice-text">__NOTICE__</p>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+
+  <header class="hero">
+    <div class="hero-top">
+      <div>
+        <h1><span class="sheen metal">Voirdire</span></h1>
+        <p class="lede">A vendor says its agent runs on a particular model. You pay for that model. Voirdire asks whether the behaviour you can observe is consistent with the claim, and puts the vendor's bond behind the answer.</p>
+        <div class="disclaimer">
+          <p>This is not proof of model identity. A black box does not permit that proof. What is on offer is behavioural testimony against a declared claim, and what gives it force is the bond, not the verdict.</p>
+        </div>
+      </div>
+      <svg class="fringe" viewBox="0 0 420 344" role="img" aria-label="Four metal plates under an interference film. The lower two return the same fringe pattern and cannot be told apart.">
+        <defs>
+          <linearGradient id="film" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#7fd8ff"/><stop offset="18%" stop-color="#9ea8ff"/>
+            <stop offset="34%" stop-color="#d59bff"/><stop offset="50%" stop-color="#ff9ec4"/>
+            <stop offset="66%" stop-color="#ffcf8f"/><stop offset="82%" stop-color="#b9f2c4"/>
+            <stop offset="100%" stop-color="#7fd8ff"/>
+          </linearGradient>
+          <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3a3f45"/><stop offset="42%" stop-color="#15181b"/>
+            <stop offset="100%" stop-color="#2a2e33"/>
+          </linearGradient>
+          <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#fff" stop-opacity="0"/>
+            <stop offset="26%" stop-color="#fff" stop-opacity=".95"/>
+            <stop offset="74%" stop-color="#fff" stop-opacity=".95"/>
+            <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+          </linearGradient>
+          <mask id="soften"><rect width="420" height="344" fill="url(#fade)"/></mask>
+        </defs>
+        <g mask="url(#soften)">
+          <rect x="0" y="6"   width="420" height="62" rx="4" fill="url(#plate)"/>
+          <rect x="0" y="6"   width="420" height="62" rx="4" fill="url(#film)" opacity=".26"/>
+          <rect x="0" y="84"  width="420" height="62" rx="4" fill="url(#plate)"/>
+          <rect x="0" y="84"  width="420" height="62" rx="4" fill="url(#film)" opacity=".44" transform="translate(-72 0)"/>
+          <rect x="0" y="162" width="420" height="62" rx="4" fill="url(#plate)"/>
+          <rect x="0" y="162" width="420" height="62" rx="4" fill="url(#film)" opacity=".70" transform="translate(-186 0)"/>
+          <rect x="0" y="240" width="420" height="62" rx="4" fill="url(#plate)"/>
+          <rect x="0" y="240" width="420" height="62" rx="4" fill="url(#film)" opacity=".70" transform="translate(-186 0)"/>
+        </g>
+        <g fill="#9c9c9c" font-family="monospace" font-size="10">
+          <text x="0" y="338">the lower two return the same fringe</text>
+        </g>
+      </svg>
+    </div>
+  </header>
+
+  <section id="limits">
+    <h2>What the battery can and cannot separate</h2>
+    <p class="lead">Every pair of model families the probes run against, and how far apart they sit relative to how far a family sits from itself. Brightness carries magnitude. A pair that falls below the floor turns spectral, because that is what an interference film does when two surfaces return the same colour from every angle you have.</p>
+    <div class="grid-wrap panel"><table class="grid" id="grid"></table></div>
+    <p class="legend" id="legend"></p>
+    <ul class="stats" id="stats"></ul>
+  </section>
+
+  <section id="round">
+    <h2>How a round runs</h2>
+    <p class="lead">The order is the mechanism. Commit strictly before sending, send strictly before revealing. Get that wrong and the vendor sees the probe set first, routes it to the expensive model, and the round measures nothing.</p>
+    <ol class="flow">
+      <li>The vendor registers a claim: agent, model family, a dated version, a validity window. It stands only while a bond stands behind it.</li>
+      <li>A challenger picks probes and writes their hash on chain. The hash covers a nonce, because the corpus is public and a commitment over known text alone is brute-forceable.</li>
+      <li>The probes go to the agent as ordinary traffic, at a moment the challenger chooses. Nothing in them reads as an audit.</li>
+      <li>The challenger reveals the transcripts. Consensus reads them one probe class at a time and returns match, mismatch or unclear, naming the fragment it relied on.</li>
+      <li>The verdict is arithmetic over those readings, never a second opinion. A divergence pays only after two referee rounds: is it visible in the submitted text, and do these transcripts belong to this agent and this declared version.</li>
+      <li>Every revealed probe is spent. From that block the vendor can cache it, so it leaves the active set.</li>
+    </ol>
+  </section>
+
+  <section id="corpus">
+    <h2>The probe corpus</h2>
+    <p class="lead">Each probe is an ordinary task with a discriminating element inside it. A probe that reads as an audit gets routed to the expensive model and measures nothing. Refusal-shape probes stay in the benign band: what is measured is where the boundary sits, never what lies behind it.</p>
+    <div class="filters" id="filters"></div>
+    <div class="corpus-meta">
+      <span class="count" id="corpus-count"></span>
+      <button class="linkish" id="toggle-all" type="button">Open all</button>
+    </div>
+    <div class="probes panel" id="probes"></div>
+  </section>
+
+  <section>
+    <h2>Verdicts</h2>
+    <p class="lead">Three, fixed when a claim is registered.</p>
+    <div class="verdicts">
+      <div class="verdict"><span class="name">CONSISTENT</span><span>The profile fits the claimed model on two or more classes, with none pointing the other way.</span></div>
+      <div class="verdict"><span class="name">INCONSISTENT</span><span>It does not fit, with the diverging classes named. A single mismatch never qualifies, because a single mismatch is what temperature noise produces.</span></div>
+      <div class="verdict"><span class="name">INCONCLUSIVE</span><span>Too few classes read, the evidence was unreadable, or the classes pointed opposite ways. This is not a pass. A claim reads unexamined until it has survived its required rounds, and there is no path from silence to a clean record.</span></div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="shell">
+    <p id="foot-note"></p>
+    <p class="fine" id="foot"></p>
+  </div>
+</footer>
+</div>
+
+<script>
+const CORPUS = __CORPUS__;
+const MATRIX = __MATRIX__;
+
+const guard = fn => { try { fn(); } catch (e) { if (window.console) console.error(e); } };
+const el = (t, c, txt) => { const n = document.createElement(t); if (c) n.className = c; if (txt != null) n.textContent = txt; return n; };
+
+guard(() => {
+  const live = MATRIX.provenance && MATRIX.provenance.kind === 'live';
+  const p = document.getElementById('notice-text');
+  if (live) {
+    document.getElementById('notice').classList.add('live');
+    p.textContent = 'Measured run of ' + (MATRIX.provenance.started_at || '').slice(0, 10) +
+      ', provider ' + MATRIX.provenance.provider + '. ' + MATRIX.battery.reliability;
+  } else {
+    p.innerHTML = '<strong>These numbers are not a measurement.</strong> The grid below was built from ' +
+      'synthetic responses so the scoring pipeline could be tested end to end. Nothing here has been run ' +
+      'against a real model. The corpus is real; the numbers are not.';
+  }
+});
+
+guard(() => {
+  const fams = MATRIX.families;
+  const pairs = {};
+  (MATRIX.battery.pairs || []).forEach(p => { pairs[p.a + '|' + p.b] = p; pairs[p.b + '|' + p.a] = p; });
+
+  let hi = 0;
+  (MATRIX.battery.pairs || []).forEach(p => { if (p.separation > hi) hi = p.separation; });
+
+  const table = document.getElementById('grid');
+  const thead = el('thead'), hrow = el('tr');
+  const corner = el('th', null, 'separation');
+  corner.setAttribute('scope', 'col');
+  hrow.appendChild(corner);
+  fams.forEach(f => { const th = el('th', null, f); th.setAttribute('scope', 'col'); hrow.appendChild(th); });
+  thead.appendChild(hrow); table.appendChild(thead);
+
+  const tbody = el('tbody');
+  let blind = 0;
+  fams.forEach(a => {
+    const row = el('tr');
+    const rh = el('th', null, a); rh.setAttribute('scope', 'row'); row.appendChild(rh);
+    fams.forEach(b => {
+      if (a === b) {
+        const td = el('td', 'self');
+        td.appendChild(el('span', 'n', '—'));
+        row.appendChild(td);
+        return;
+      }
+      const p = pairs[a + '|' + b];
+      const isBlind = p && p.verdict === 'BLIND';
+      const td = el('td', isBlind ? 'blind' : 'sep');
+      if (!isBlind && p && hi > 0) {
+        td.style.setProperty('--lum', (0.18 + 0.82 * (p.separation / hi)).toFixed(3));
+      }
+      td.appendChild(el('span', 'n', p ? p.separation.toFixed(2) : '—'));
+      td.appendChild(el('span', 't', isBlind ? 'cannot separate' : 'separates'));
+      if (isBlind) blind++;
+      row.appendChild(td);
+    });
+    tbody.appendChild(row);
+  });
+  table.appendChild(tbody);
+
+  const total = fams.length * (fams.length - 1) / 2;
+  document.getElementById('legend').textContent = blind
+    ? (blind / 2) + ' of ' + total + ' pairs fall below the floor of ' + MATRIX.separation_floor.toFixed(2) +
+      '. Naming them is the difference between a measurement and a claim.'
+    : 'No pair falls below the floor of ' + MATRIX.separation_floor.toFixed(2) +
+      ' in this run. That is a statement about this battery and these four families, and it does not extend to a family the battery has never seen.';
+});
+
+guard(() => {
+  const b = MATRIX.battery;
+  const rates = b.false_accusation_rate || {};
+  let worst = null;
+  for (const family in rates) {
+    if (!worst || rates[family] > worst[1]) worst = [family, rates[family]];
+  }
+  const items = [
+    [b.accuracy.toFixed(3), 'battery accuracy, classified leave-one-out'],
+    [worst ? worst[1].toFixed(3) : '—', 'worst false accusation rate' + (worst ? ', ' + worst[0] : '')],
+    [String(CORPUS.probes.length), 'probes in the corpus, across three judged classes'],
+    [(b.samples || '—') + ' / ' + b.feature_width, 'samples against features; below one and the accuracy means nothing'],
+  ];
+  const ul = document.getElementById('stats');
+  items.forEach(pair => {
+    const li = el('li');
+    li.appendChild(el('span', 'v mono', pair[0]));
+    li.appendChild(el('span', 'k', pair[1]));
+    ul.appendChild(li);
+  });
+});
+
+guard(() => {
+  const classes = [];
+  CORPUS.probes.forEach(p => { if (classes.indexOf(p.class) < 0) classes.push(p.class); });
+  const filters = document.getElementById('filters');
+  const host = document.getElementById('probes');
+  let active = 'all';
+
+  const toggleAll = document.getElementById('toggle-all');
+  const counter = document.getElementById('corpus-count');
+
+  const setToggleLabel = () => {
+    const rows = host.querySelectorAll('details');
+    let open = 0;
+    Array.prototype.forEach.call(rows, r => { if (r.open) open++; });
+    toggleAll.textContent = (open === rows.length && rows.length) ? 'Close all' : 'Open all';
+  };
+
+  const render = () => {
+    host.textContent = '';
+    CORPUS.probes.filter(p => active === 'all' || p.class === active).forEach(p => {
+      const box = el('details', 'probe');
+      const head = el('summary');
+      head.appendChild(el('span', 'id', p.probe_id));
+      head.appendChild(el('span', 'tag', p.class.replace(/_/g, ' ')));
+      head.appendChild(el('span', 'tag', p.k + ' runs'));
+      if (p.status !== 'active') head.appendChild(el('span', 'tag limit', 'burned'));
+      if (p.blind_to && p.blind_to.length) {
+        head.appendChild(el('span', 'tag limit', 'blind on ' + p.blind_to.length + ' pair' + (p.blind_to.length > 1 ? 's' : '')));
+      }
+      head.appendChild(el('span', 'peek', p.carrier));
+      head.appendChild(el('span', 'chev'));
+      box.appendChild(head);
+
+      const body = el('div', 'body');
+      body.appendChild(el('p', 'carrier', p.carrier));
+      const dl = el('dl');
+      const add = (k, v) => { dl.appendChild(el('dt', null, k)); dl.appendChild(el('dd', null, v)); };
+      add('discriminator', p.discriminator);
+      add('read for', p.reads);
+      if (p.blind_to && p.blind_to.length) add('blind to', p.blind_to.map(x => x.join(' and ')).join('; '));
+      if (p.ethics) add('why this is benign', p.ethics);
+      body.appendChild(dl);
+      box.appendChild(body);
+      box.addEventListener('toggle', setToggleLabel);
+      host.appendChild(box);
+    });
+    const n = host.querySelectorAll('details').length;
+    counter.textContent = n + (n === 1 ? ' probe' : ' probes');
+    setToggleLabel();
+  };
+
+  toggleAll.onclick = () => {
+    const rows = host.querySelectorAll('details');
+    const opening = toggleAll.textContent === 'Open all';
+    Array.prototype.forEach.call(rows, r => { r.open = opening; });
+    setToggleLabel();
+  };
+
+  [['all', 'everything']].concat(classes.map(c => [c, c.replace(/_/g, ' ')])).forEach(pair => {
+    const b = el('button', null, pair[1]);
+    b.setAttribute('aria-pressed', String(pair[0] === active));
+    b.onclick = () => {
+      active = pair[0];
+      Array.prototype.forEach.call(filters.children, x => x.setAttribute('aria-pressed', 'false'));
+      b.setAttribute('aria-pressed', 'true');
+      render();
+    };
+    filters.appendChild(b);
+  });
+  render();
+});
+
+document.getElementById('foot-note').textContent =
+  'Built on GenLayer, alongside Jastrow, which measures how far validators disagree on one spec, and Suborn, which pays for adversarial evidence against one. Voirdire takes the evidence envelope, the two referee framings and the injection fencing from Suborn unchanged.';
+document.getElementById('foot').textContent =
+  CORPUS.version + '   digest ' + (MATRIX.corpus_digest || '').slice(0, 16) +
+  '   floor ' + MATRIX.separation_floor.toFixed(2) +
+  '   provenance ' + MATRIX.provenance.kind;
+</script>
+</body>
+</html>

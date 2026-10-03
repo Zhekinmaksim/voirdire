@@ -1,0 +1,28 @@
+{
+  "name": "voirdire-video",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render Voirdire out/voirdire.mp4",
+    "still": "remotion still Voirdire out/frame.png",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@remotion/cli": "^4.0.523",
+    "@remotion/media-utils": "^4.0.523",
+    "@remotion/transitions": "^4.0.523",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "remotion": "^4.0.523"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "typescript": "^7.0.2"
+  },
+  "private": true
+}

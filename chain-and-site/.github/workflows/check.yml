@@ -1,0 +1,39 @@
+name: check
+on: [push, pull_request]
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: contract and cli
+        run: python3 test/run_tests.py
+      - name: pipeline on a fixture
+        run: |
+          python3 scripts/run_battery.py --offline --k 30 --out runs/fixture.jsonl
+          python3 scripts/build_matrix.py runs/fixture.jsonl --out web/matrix.json
+          python3 scripts/build_page.py
+      - name: the matrix gate must refuse to publish a fixture
+        run: |
+          set +e
+          python3 scripts/check_matrix.py web/matrix.json
+          code=$?
+          set -e
+          if [ "$code" != "2" ]; then
+            echo "expected UNDECIDABLE (2) for a fixture matrix, got $code"
+            exit 1
+          fi
+      - name: blind pairs must be reported, not averaged away
+        run: |
+          python3 scripts/run_battery.py --offline --k 30 --collide llama-class,mistral-class --out runs/collide.jsonl
+          python3 scripts/build_matrix.py runs/collide.jsonl --out /tmp/collide.json
+          python3 - <<'PY'
+          import json
+          m = json.load(open('/tmp/collide.json'))
+          blind = [p for p in m['battery']['pairs'] if p['verdict'] == 'BLIND']
+          assert any({p['a'], p['b']} == {'llama-class', 'mistral-class'} for p in blind), \
+              'two identical families were reported as separable'
+          print('ok: identical families reported BLIND')
+          PY
