@@ -125,3 +125,10 @@ Vendor claim labels are limited to 256 characters and cannot contain ASCII contr
 characters. Oracle prompts serialize vendor metadata inside content-derived markers
 and explicitly treat it as untrusted data. This reduces instruction confusion; it
 does not prove resistance to every prompt-injection strategy or model-family identity.
+
+Withdrawal sends an external EVM value message using the existing typed
+`gl.message.sender_address`; it must not reconstruct `Address(Address)`.
+The message executes on finalization. A successful contract return means the
+transfer was emitted, not yet that the recipient's chain balance increased.
+Verify finalization and the external transfer before reporting funds received.
+API reference: https://docs.genlayer.com/developers/intelligent-contracts/features/value-transfers

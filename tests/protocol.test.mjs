@@ -109,3 +109,14 @@ test('wallet wrapper works with immutable injected provider methods',async()=>{
  const wrapped=trackWalletProvider(provider,value=>seen.push(value));
  assert.equal(await wrapped.request({method:'eth_sendTransaction'}),hash);assert.deepEqual(seen,[hash]);
 });
+
+import {corpusRoundCapacity} from '../app/src/protocol.js';
+test('registration round capacity uses two fresh probes per required class and fails closed',()=>{
+ const make=(counts)=>Object.entries(counts).flatMap(([group,count])=>Array.from({length:count},(_,i)=>({probe_id:`${group}-${i}`,class:group,status:'active',carrier:'task'})));
+ const groups={tokenizer_artifact:7,refusal_shape:7,repeat_stability:7};
+ assert.equal(corpusRoundCapacity(make(groups)),3);
+ assert.equal(corpusRoundCapacity(make({...groups,repeat_stability:1})),0);
+ assert.equal(corpusRoundCapacity(undefined),0);
+ const probes=make(groups);probes[0].status='retired';probes.push(probes[1],{probe_id:'extra',class:'other',status:'active',carrier:'task'});
+ assert.equal(corpusRoundCapacity(probes),3);
+});

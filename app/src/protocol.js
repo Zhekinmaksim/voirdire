@@ -17,3 +17,15 @@ export function validateEnvelope(env) {
   for (const t of env.transcripts) if (![t.probe_id, t.probe_class, t.sent].every(v => typeof v === 'string' && v.length)) throw new Error('An envelope probe is incomplete.');
   return env;
 }
+
+export function corpusRoundCapacity(probes) {
+  const classes=['tokenizer_artifact','refusal_shape','repeat_stability'];
+  const seen=new Set();
+  const counts=Object.fromEntries(classes.map(name=>[name,0]));
+  for(const probe of Array.isArray(probes)?probes:[]) {
+    if(probe?.status!=='active'||!classes.includes(probe.class)||typeof probe.probe_id!=='string'||!probe.probe_id||seen.has(probe.probe_id)||typeof probe.carrier!=='string'||!probe.carrier)continue;
+    seen.add(probe.probe_id);counts[probe.class]++;
+  }
+  // A prepared round consumes two distinct probes in each of three classes.
+  return Math.min(...classes.map(name=>Math.floor(counts[name]/2)));
+}
