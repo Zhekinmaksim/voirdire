@@ -2,10 +2,15 @@
 
 A 1:00 cut about the Voirdire project, edited to `Specimen_Room.mp3`.
 
+This is the original **historical, synthetic demonstration**, not a current v3
+launch film. Its live-run and deployment status captions are outdated. The
+composition still typechecks and renders; see [AUDIT.md](AUDIT.md) for the
+2026-10-03 verification and the content changes required before publication.
+
     npm install
     ./scripts/cut-audio.sh   # builds public/specimen-cut.m4a, 30 bars
     npm run studio
-    npm run render           # out/voirdire-60s.mp4
+    npm run render           # out/voirdire.mp4
 
 1920x1080, 30 fps, 1800 frames, twelve scenes.
 
@@ -142,5 +147,6 @@ CRF is 20. At CRF 16 with the old animated grain the same film came out 200 MB;
 static grain at CRF 20 is 38 MB and looks the same.
 
 Fonts fall back through a stack. Geist and Geist Mono are what the design system
-names; install them locally or wire `@remotion/google-fonts` for Inter and IBM
-Plex Mono to match the site exactly.
+names. Bundle and load the chosen fonts in the project to make typography
+reproducible. The original site uses a different fallback stack, so installing
+Geist alone does not guarantee an exact site match.

@@ -106,6 +106,18 @@ was made integer1, with a no-float calldata regression check. The final v3 addre
 above supersedes that immutable trial at `0x783F194EA2BC28705B3909De5935700F4b7b4d8E`.
 Its microscopic test bond remains in the old contract until protocol recovery.
 
+The original obsidian, metal and thin-film landing design is restored at `/` with
+the fresh v3 confusion counts and explicit testnet/collector limits. The working
+registry is at `/app/`, restyled with the same tokens; no protocol or contract
+bytes changed. Local browser checks read all three real v3 claims, verified the
+profile, exercised the registration/examination/history screens, corpus filters
+and keyboard disclosure, and found no page errors or horizontal overflow at
+390 px. Reduced motion suppresses the wordmark animation.
+
+The original Remotion composition passes typechecking, full 1,800-frame rendering
+and complete MP4 decoding. Its historical captions and synthetic matrix remain
+unsuitable for a current launch cut; see [film/AUDIT.md](film/AUDIT.md).
+
 Historical v2 judge disagreements and earlier withdrawal failures remain in
 local journals. New deployment does not modify old contracts or move deposits.
 The old v2 deployment config is preserved for recovery. The original film has

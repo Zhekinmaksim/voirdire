@@ -1,0 +1,119 @@
+
+/* Base system: Hyperstudio, "blueprint scratched into obsidian", via Refero
+   Styles — tokens verbatim. The metal and thin-film layer on top is this
+   project's own; see design/DESIGN.md for what was added and why. */
+:root{
+  --obsidian:#101010;
+  --carbon:#080808;
+  --chalk:#f3f3f3;
+  --smoke:#9c9c9c;
+  --ash:#c1c1c1;
+  --graphite:#212121;
+  --iron:#474747;
+  --slate:#3b3d45;
+  --signal:#ffffff;
+  --gold:#6f6759;
+
+  --sans:'Aeonik','Satoshi','General Sans','Inter',ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:'Input','IBM Plex Mono','JetBrains Mono','Space Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+
+  --r-tag:4px;
+  --r-card:8px;
+  --r-pill:9999px;
+
+  --gap:120px;
+  --pad:32px;
+  --page:1200px;
+  --measure:66ch;
+
+  /* Thin film. One spectrum, reused wherever interference is being shown, so
+     the page never invents a second rainbow. */
+  --film:linear-gradient(100deg,
+      #7fd8ff 0%, #9ea8ff 18%, #d59bff 34%,
+      #ff9ec4 50%, #ffcf8f 66%, #b9f2c4 82%, #7fd8ff 100%);
+  /* Brushed steel: a bright top edge, a dark belly, a faint return at the
+     bottom. This is the whole trick that makes a flat fill read as metal. */
+  --steel:linear-gradient(180deg,
+      rgba(255,255,255,.085) 0%, rgba(255,255,255,.022) 18%,
+      rgba(0,0,0,.30) 62%, rgba(255,255,255,.030) 100%);
+  --edge:linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,.03) 40%, rgba(0,0,0,.55));
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--obsidian);color:var(--chalk);
+  font-family:var(--sans);font-size:16px;line-height:1.55;font-weight:400;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Atmosphere: a very low iridescent wash and a grain layer, both inert.
+   Without the grain, large dark gradients band badly on 8-bit panels. */
+body::before{
+  content:"";position:fixed;inset:-20%;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(52% 40% at 18% 0%, rgba(127,216,255,.10), transparent 62%),
+    radial-gradient(46% 38% at 86% 8%, rgba(213,155,255,.09), transparent 64%),
+    radial-gradient(60% 46% at 50% 104%, rgba(185,242,196,.05), transparent 66%);
+  filter:blur(20px);
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.32;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.45'/%3E%3C/svg%3E");
+}
+.above{position:relative;z-index:1}
+
+h1,h2,h3{margin:0;font-weight:400;color:var(--chalk)}
+h1{font-size:68px;font-size:clamp(42px,6.4vw,76px);line-height:1.02;letter-spacing:-.03em}
+h2{font-size:44px;font-size:clamp(30px,3.6vw,44px);line-height:1.07;letter-spacing:-.31px}
+h3{font-size:23px;line-height:1.07}
+p{margin:0;max-width:var(--measure)}
+a{color:var(--chalk);text-underline-offset:4px;text-decoration-color:var(--iron)}
+a:hover{text-decoration-color:var(--ash)}
+a:focus-visible,button:focus-visible{outline:1px solid var(--ash);outline-offset:3px}
+.mono{font-family:var(--mono);letter-spacing:-.022em}
+.smoke{color:var(--smoke)}
+.small{font-size:14px}
+.shell{max-width:var(--page);margin:0 auto;padding:0 28px}
+.rule{height:1px;background:var(--graphite);border:0;margin:0}
+
+/* ---- metal type -------------------------------------------------------- */
+/* Progressive: plain chalk first, metal only where the engine can clip a
+   gradient to glyphs. An engine that cannot would otherwise render the
+   wordmark invisible. */
+.metal{color:var(--chalk)}
+@supports ((-webkit-background-clip:text) or (background-clip:text)){
+  .metal{
+    background:linear-gradient(178deg,#ffffff 0%,#cfd4da 26%,#7c848d 46%,#eef1f4 56%,#9aa2ab 72%,#5d646c 100%);
+    -webkit-background-clip:text;background-clip:text;
+    color:transparent;-webkit-text-fill-color:transparent;
+  }
+}
+/* One orchestrated moment: a single specular pass across the wordmark on load. */
+.sheen{position:relative;display:inline-block;overflow:hidden;padding:0 .06em;margin:0 -.06em}
+.sheen::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.55) 50%,transparent 62%);
+  -webkit-mask-image:linear-gradient(#000,#000);
+  mix-blend-mode:screen;transform:translateX(-120%);
+  animation:pass 2.6s cubic-bezier(.22,.61,.36,1) .35s 1 both;
+}
+@keyframes pass{to{transform:translateX(120%)}}
+
+/* ---- bevelled panel ---------------------------------------------------- */
+.panel{
+  position:relative;border-radius:var(--r-card);
+  background:
+    linear-gradient(var(--carbon),var(--carbon)) padding-box,
+    var(--edge) border-box;
+  border:1px solid transparent;
+}
+/* brushed grain, horizontal, barely there */
+.panel::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:
+    var(--steel),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.014) 0 1px,transparent 1px 3px);
+  opacity:.9;
+}
+.panel > *{position:relative}
+

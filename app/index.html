@@ -1,2 +1,515 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101010"><meta name="description" content="Bonded behavioural claims and public examination on GenLayer."><link rel="icon" href="/favicon.svg" type="image/svg+xml"><title>Voirdire — claim registry</title></head><body><div id="app"></div><script type="module" src="/src/main.js"></script></body></html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#101010">
+<meta name="description" content="Bonded model declarations and collector-attested behavioural examinations on GenLayer Bradbury. Explore the evidence and open the working application.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>Voirdire | behavioural testimony, backed by a bond</title>
+<style>
+
+/* Base system: Hyperstudio, "blueprint scratched into obsidian", via Refero
+   Styles — tokens verbatim. The metal and thin-film layer on top is this
+   project's own; see design/DESIGN.md for what was added and why. */
+:root{
+  --obsidian:#101010;
+  --carbon:#080808;
+  --chalk:#f3f3f3;
+  --smoke:#9c9c9c;
+  --ash:#c1c1c1;
+  --graphite:#212121;
+  --iron:#474747;
+  --slate:#3b3d45;
+  --signal:#ffffff;
+  --gold:#6f6759;
+
+  --sans:'Aeonik','Satoshi','General Sans','Inter',ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:'Input','IBM Plex Mono','JetBrains Mono','Space Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+
+  --r-tag:4px;
+  --r-card:8px;
+  --r-pill:9999px;
+
+  --gap:120px;
+  --pad:32px;
+  --page:1200px;
+  --measure:66ch;
+
+  /* Thin film. One spectrum, reused wherever interference is being shown, so
+     the page never invents a second rainbow. */
+  --film:linear-gradient(100deg,
+      #7fd8ff 0%, #9ea8ff 18%, #d59bff 34%,
+      #ff9ec4 50%, #ffcf8f 66%, #b9f2c4 82%, #7fd8ff 100%);
+  /* Brushed steel: a bright top edge, a dark belly, a faint return at the
+     bottom. This is the whole trick that makes a flat fill read as metal. */
+  --steel:linear-gradient(180deg,
+      rgba(255,255,255,.085) 0%, rgba(255,255,255,.022) 18%,
+      rgba(0,0,0,.30) 62%, rgba(255,255,255,.030) 100%);
+  --edge:linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,.03) 40%, rgba(0,0,0,.55));
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--obsidian);color:var(--chalk);
+  font-family:var(--sans);font-size:16px;line-height:1.55;font-weight:400;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Atmosphere: a very low iridescent wash and a grain layer, both inert.
+   Without the grain, large dark gradients band badly on 8-bit panels. */
+body::before{
+  content:"";position:fixed;inset:-20%;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(52% 40% at 18% 0%, rgba(127,216,255,.10), transparent 62%),
+    radial-gradient(46% 38% at 86% 8%, rgba(213,155,255,.09), transparent 64%),
+    radial-gradient(60% 46% at 50% 104%, rgba(185,242,196,.05), transparent 66%);
+  filter:blur(20px);
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.32;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.45'/%3E%3C/svg%3E");
+}
+.above{position:relative;z-index:1}
+
+h1,h2,h3{margin:0;font-weight:400;color:var(--chalk)}
+h1{font-size:68px;font-size:clamp(42px,6.4vw,76px);line-height:1.02;letter-spacing:-.03em}
+h2{font-size:44px;font-size:clamp(30px,3.6vw,44px);line-height:1.07;letter-spacing:-.31px}
+h3{font-size:23px;line-height:1.07}
+p{margin:0;max-width:var(--measure)}
+a{color:var(--chalk);text-underline-offset:4px;text-decoration-color:var(--iron)}
+a:hover{text-decoration-color:var(--ash)}
+a:focus-visible,button:focus-visible{outline:1px solid var(--ash);outline-offset:3px}
+.mono{font-family:var(--mono);letter-spacing:-.022em}
+.smoke{color:var(--smoke)}
+.small{font-size:14px}
+.shell{max-width:var(--page);margin:0 auto;padding:0 28px}
+.rule{height:1px;background:var(--graphite);border:0;margin:0}
+
+/* ---- metal type -------------------------------------------------------- */
+/* Progressive: plain chalk first, metal only where the engine can clip a
+   gradient to glyphs. An engine that cannot would otherwise render the
+   wordmark invisible. */
+.metal{color:var(--chalk)}
+@supports ((-webkit-background-clip:text) or (background-clip:text)){
+  .metal{
+    background:linear-gradient(178deg,#ffffff 0%,#cfd4da 26%,#7c848d 46%,#eef1f4 56%,#9aa2ab 72%,#5d646c 100%);
+    -webkit-background-clip:text;background-clip:text;
+    color:transparent;-webkit-text-fill-color:transparent;
+  }
+}
+/* One orchestrated moment: a single specular pass across the wordmark on load. */
+.sheen{position:relative;display:inline-block;overflow:hidden;padding:0 .06em;margin:0 -.06em}
+.sheen::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.55) 50%,transparent 62%);
+  -webkit-mask-image:linear-gradient(#000,#000);
+  mix-blend-mode:screen;transform:translateX(-120%);
+  animation:pass 2.6s cubic-bezier(.22,.61,.36,1) .35s 1 both;
+}
+@keyframes pass{to{transform:translateX(120%)}}
+
+/* ---- bevelled panel ---------------------------------------------------- */
+.panel{
+  position:relative;border-radius:var(--r-card);
+  background:
+    linear-gradient(var(--carbon),var(--carbon)) padding-box,
+    var(--edge) border-box;
+  border:1px solid transparent;
+}
+/* brushed grain, horizontal, barely there */
+.panel::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:
+    var(--steel),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.014) 0 1px,transparent 1px 3px);
+  opacity:.9;
+}
+.panel > *{position:relative}
+
+/* ---- masthead ---------------------------------------------------------- */
+.masthead{border-bottom:1px solid var(--graphite);background:rgba(8,8,8,.72);position:sticky;top:0;z-index:5;backdrop-filter:blur(10px)}
+.masthead .shell{display:flex;align-items:center;justify-content:space-between;height:62px;gap:16px}
+.wordmark{font-size:18px;letter-spacing:-.01em}
+.masthead nav{display:flex;gap:6px;font-size:14px}
+.masthead nav a{color:var(--smoke);text-decoration:none;padding:6px 12px;border-radius:var(--r-tag)}
+.masthead nav a:hover{color:var(--chalk);background:rgba(255,255,255,.045)}
+
+/* ---- hero -------------------------------------------------------------- */
+.hero{padding:52px 0 60px;border-bottom:1px solid var(--graphite)}
+.hero-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:56px;align-items:center}
+.hero h1{margin-bottom:22px}
+.fringe{width:100%;max-width:420px;height:auto;display:block;margin-left:auto}
+.hero .lede{font-size:19px;line-height:1.45;max-width:52ch;color:var(--smoke)}
+.disclaimer{
+  margin-top:26px;padding:20px 24px;max-width:58ch;border-radius:var(--r-card);
+  border:1px solid transparent;
+  background:linear-gradient(var(--obsidian),var(--obsidian)) padding-box, var(--film) border-box;
+}
+.disclaimer p{max-width:none;color:var(--ash)}
+
+.provenance-bar{border-bottom:1px solid var(--graphite);background:rgba(255,255,255,.022)}
+.notice{display:flex;gap:12px;align-items:flex-start;padding:13px 0}
+.notice .dot{
+  flex:0 0 auto;width:8px;height:8px;border-radius:var(--r-pill);margin-top:7px;
+  background:var(--film);background-size:300% 100%;animation:drift 9s linear infinite;
+}
+.notice.live .dot{background:var(--gold);animation:none}
+.notice p{font-size:14px;line-height:1.5;color:var(--smoke);max-width:80ch}
+.notice strong{color:var(--chalk);font-weight:400}
+@keyframes drift{to{background-position:300% 0}}
+
+section{padding:var(--gap) 0 0}
+section .lead{margin-top:16px;color:var(--smoke);font-size:17px}
+
+/* ---- separation grid --------------------------------------------------- */
+.grid-wrap{margin-top:36px;overflow-x:auto;border-radius:var(--r-card)}
+table.grid{border-collapse:separate;border-spacing:0;width:100%;font-size:14px}
+table.grid th,table.grid td{border-bottom:1px solid var(--graphite);border-right:1px solid var(--graphite);padding:18px 20px;text-align:left;vertical-align:top}
+table.grid tr:last-child th,table.grid tr:last-child td{border-bottom:0}
+table.grid th:last-child,table.grid td:last-child{border-right:0}
+table.grid th{color:var(--smoke);font-weight:400;white-space:nowrap}
+table.grid thead th{color:var(--chalk)}
+td .n{display:block;font-family:var(--mono);font-size:19px;letter-spacing:-.022em;font-variant-numeric:tabular-nums}
+td .t{display:block;font-size:13px;color:var(--smoke);margin-top:5px}
+td.self .n{color:var(--iron)}
+/* separating cells: neutral steel, luminance carries magnitude */
+td.sep{position:relative}
+td.sep::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,0) 70%);
+  opacity:var(--lum,.3);
+}
+td.sep > *{position:relative}
+/* The one cell the instrument could not resolve: the surface goes spectral.
+   The film is the cell's own background, with a solid light fallback declared
+   first — the text on it is dark, so a cell that failed to paint its gradient
+   would otherwise be dark on dark and unreadable. */
+td.blind{
+  background-color:#cdd6df;
+  background-image:var(--film);
+  background-size:300% 100%;
+  animation:drift 11s linear infinite;
+}
+td.blind .n,td.blind .t{color:#0b0b0b}
+td.blind .t{opacity:.72}
+
+.legend{margin-top:16px;font-size:14px;color:var(--smoke);max-width:var(--measure)}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1px;margin:44px 0 0;padding:0;list-style:none;background:var(--graphite);border-top:1px solid var(--graphite);border-bottom:1px solid var(--graphite)}
+.stats li{background:var(--obsidian);padding:28px 24px}
+.stats .v{display:block;font-size:34px;line-height:1.03;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.stats .k{display:block;font-size:14px;color:var(--smoke);margin-top:10px;max-width:28ch;line-height:1.45}
+
+/* ---- sequence ---------------------------------------------------------- */
+ol.flow{margin:36px 0 0;padding:0;list-style:none;counter-reset:step;max-width:var(--measure)}
+ol.flow li{
+  counter-increment:step;display:grid;grid-template-columns:44px 1fr;gap:20px;
+  padding:22px 0;border-top:1px solid var(--graphite);color:var(--ash);
+}
+ol.flow li:last-child{border-bottom:1px solid var(--graphite)}
+ol.flow li::before{content:"0" counter(step);font-family:var(--mono);font-size:13px;color:var(--iron);padding-top:5px}
+
+/* ---- corpus ------------------------------------------------------------ */
+.filters{display:flex;flex-wrap:wrap;gap:10px;margin-top:32px}
+.filters button{
+  font:inherit;font-size:14px;padding:9px 18px;cursor:pointer;color:var(--smoke);
+  background:transparent;border:1px solid var(--graphite);border-radius:var(--r-pill);
+}
+.filters button:hover{color:var(--chalk);border-color:var(--iron)}
+.filters button[aria-pressed="true"]{background:var(--signal);color:var(--obsidian);border-color:var(--signal)}
+
+/* One bevelled plate around the whole corpus, hairlines between rows. Twenty-one
+   stacked panels would be noise; in this system the line is the layout. */
+.probes{margin-top:28px;border-radius:var(--r-card);overflow:hidden}
+.probe{border-bottom:1px solid var(--graphite)}
+.probe:last-child{border-bottom:0}
+.probe > summary{
+  list-style:none;cursor:pointer;padding:18px var(--pad);
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+}
+.probe > summary::-webkit-details-marker{display:none}
+.probe > summary:hover{background:rgba(255,255,255,.03)}
+.probe > summary:focus-visible{outline:1px solid var(--ash);outline-offset:-2px}
+.probe .id{font-family:var(--mono);font-size:14px;letter-spacing:-.022em;color:var(--chalk)}
+/* the collapsed row still has to be scannable, so it carries the opening of the
+   carrier task, cut with an ellipsis */
+.peek{
+  flex:1 1 220px;min-width:0;color:var(--smoke);font-size:14px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.probe[open] .peek{visibility:hidden}
+.chev{
+  flex:0 0 auto;width:9px;height:9px;margin-left:auto;
+  border-right:1px solid var(--iron);border-bottom:1px solid var(--iron);
+  transform:rotate(45deg) translate(-2px,-2px);transition:transform .18s ease;
+}
+.probe[open] .chev{transform:rotate(-135deg) translate(-3px,-3px)}
+.probe > summary:hover .chev{border-color:var(--ash)}
+.probe .body{padding:0 var(--pad) var(--pad)}
+.corpus-meta{margin-top:20px;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+.corpus-meta .count{font-family:var(--mono);font-size:13px;color:var(--smoke)}
+.linkish{
+  font:inherit;font-size:13px;background:none;border:0;padding:0;cursor:pointer;
+  color:var(--smoke);text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--iron);
+}
+.linkish:hover{color:var(--chalk)}
+.tag{font-size:13px;color:var(--smoke);border:1px solid var(--graphite);border-radius:var(--r-tag);padding:3px 10px}
+.tag.limit{
+  color:var(--chalk);border:1px solid transparent;
+  background:linear-gradient(var(--carbon),var(--carbon)) padding-box, var(--film) border-box;
+}
+.carrier{
+  margin-top:4px;padding:18px 20px;border-radius:var(--r-tag);max-width:none;
+  color:var(--ash);background:rgba(255,255,255,.028);border-left:1px solid var(--iron);
+}
+.probe dl{display:grid;grid-template-columns:150px 1fr;gap:10px 24px;margin:20px 0 0;font-size:14px;line-height:1.5}
+.probe dt{color:var(--smoke)}
+.probe dd{margin:0;color:var(--ash)}
+
+/* ---- verdicts ---------------------------------------------------------- */
+.verdicts{margin-top:36px;max-width:var(--measure)}
+.verdict{display:grid;grid-template-columns:170px 1fr;gap:24px;padding:22px 0;border-top:1px solid var(--graphite);color:var(--ash)}
+.verdict:last-child{border-bottom:1px solid var(--graphite)}
+.verdict .name{font-family:var(--mono);font-size:14px;letter-spacing:-.022em;color:var(--chalk)}
+
+footer{margin-top:var(--gap);border-top:1px solid var(--graphite);background:var(--carbon)}
+footer .shell{padding-top:44px;padding-bottom:64px}
+footer p{max-width:80ch;color:var(--smoke)}
+footer .fine{margin-top:18px;font-family:var(--mono);font-size:13px;color:var(--iron)}
+
+@media (max-width:980px){
+  .hero-top{grid-template-columns:1fr;gap:36px}
+  .fringe{max-width:420px}
+}
+@media (max-width:760px){
+  :root{--gap:76px;--pad:22px}
+  .hero{padding:36px 0 40px}
+  .hero .lede{font-size:18px}
+  .probe dl,.verdict{grid-template-columns:1fr;gap:4px}
+  .peek{display:none}
+  .probe dt{margin-top:12px}
+  ol.flow li{grid-template-columns:32px 1fr;gap:12px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .sheen::after{display:none}
+}
+
+html{scroll-padding-top:86px}
+.skip{position:fixed;top:8px;left:8px;z-index:10;padding:10px 16px;background:var(--chalk);color:var(--carbon);transform:translateY(-150%)}
+.skip:focus{transform:none}
+.masthead .wordmark{text-decoration:none;white-space:nowrap}
+.masthead nav a.open-app{color:var(--chalk);border:1px solid var(--iron)}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+.cta{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 18px;text-decoration:none;border:1px solid var(--iron);border-radius:var(--r-tag);white-space:nowrap;font-size:14px}
+.cta.primary{background:var(--chalk);color:var(--carbon);border-color:var(--chalk)}
+.cta:hover{border-color:var(--ash)}
+.disclaimer{font-size:14px;margin-top:22px;padding:16px 20px}
+.notice{padding:13px 0}
+table.grid{min-width:620px}
+table.grid caption{padding:0 0 12px;text-align:left;color:var(--smoke);font-size:13px}
+.grid-wrap{padding-top:16px}
+table.grid caption{padding-left:20px;padding-right:20px}
+td.blind{animation:none;background-size:100% 100%}
+td.self .n{color:var(--smoke)}
+.source-links{display:flex;gap:18px;flex-wrap:wrap;margin-top:24px;font-size:14px}
+.probe[hidden]{display:none}
+.tag.profile{color:var(--chalk);border-color:var(--iron)}
+.scope{margin-top:20px;font-size:14px;color:var(--smoke)}
+.proof-list{margin-top:32px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border-top:1px solid var(--graphite)}
+.proof-list article{padding:28px 32px 28px 0;border-bottom:1px solid var(--graphite)}
+.proof-list article:nth-child(even){padding-left:32px;border-left:1px solid var(--graphite)}
+.proof-list h3{font-size:20px;margin-bottom:12px}
+.proof-list p{font-size:15px;color:var(--smoke)}
+.proof-list a{display:inline-block;margin-top:16px;font-size:14px}
+.verdict .name.unresolved{background:var(--film);background-clip:text;-webkit-background-clip:text;color:transparent}
+footer .fine{color:var(--smoke);overflow-wrap:anywhere}
+@media(max-width:760px){.shell{padding-left:22px;padding-right:22px}.masthead .shell{gap:12px}.masthead nav{gap:2px}.masthead nav a{padding:6px 8px}.masthead nav a[href="#round"],.masthead nav a[href="#corpus"]{display:none}.proof-list{grid-template-columns:1fr}.proof-list article:nth-child(even){padding-left:0;border-left:0}.hero-actions .cta{flex:1 1 auto}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stats li{padding:24px 18px}.stats .v{font-size:30px}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="masthead"><div class="shell">
+  <a class="wordmark metal" href="/">Voirdire</a>
+  <nav aria-label="Main navigation"><a href="#limits">Limits</a><a href="#round">How a round runs</a><a href="#corpus">Corpus</a><a class="open-app" href="/app/">Open app</a></nav>
+</div></div>
+<div class="above">
+<div class="provenance-bar"><div class="shell"><div class="notice live">
+  <p><strong>Live evidence on Bradbury testnet.</strong> Fresh confirmation: 1,800 responses, 300 rounds, three fixed model/provider combinations. <a href="/research/">Read the scope and limits</a>.</p>
+</div></div></div>
+<main id="main" class="shell">
+<header class="hero"><div class="hero-top">
+  <div>
+    <h1><span class="sheen metal">Voirdire</span></h1>
+    <p class="lede">A model claim. A bond behind it. An examination of the behaviour you can actually observe.</p>
+    <div class="hero-actions"><a class="cta primary" href="/app/">Open application</a><a class="cta" href="/research/">View the evidence</a></div>
+    <div class="disclaimer"><p>Behavioural testimony, not proof of model identity. A trusted collector records responses; a bond gives a declared claim economic weight. Bradbury uses testnet GEN.</p></div>
+  </div>
+  <svg class="fringe" viewBox="0 0 420 344" role="img" aria-label="Metal plates under an interference film, an illustration of observable behaviour and unresolved outcomes.">
+        <defs>
+          <linearGradient id="film" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#7fd8ff"/><stop offset="18%" stop-color="#9ea8ff"/>
+            <stop offset="34%" stop-color="#d59bff"/><stop offset="50%" stop-color="#ff9ec4"/>
+            <stop offset="66%" stop-color="#ffcf8f"/><stop offset="82%" stop-color="#b9f2c4"/>
+            <stop offset="100%" stop-color="#7fd8ff"/>
+          </linearGradient>
+          <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3a3f45"/><stop offset="42%" stop-color="#15181b"/>
+            <stop offset="100%" stop-color="#2a2e33"/>
+          </linearGradient>
+          <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#fff" stop-opacity="0"/>
+            <stop offset="26%" stop-color="#fff" stop-opacity=".95"/>
+            <stop offset="74%" stop-color="#fff" stop-opacity=".95"/>
+            <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+          </linearGradient>
+          <mask id="soften"><rect width="420" height="344" fill="url(#fade)"/></mask>
+        </defs>
+        <g mask="url(#soften)">
+          <rect x="0" y="6"   width="420" height="62" rx="4" fill="url(#plate)"/>
+          <rect x="0" y="6"   width="420" height="62" rx="4" fill="url(#film)" opacity=".26"/>
+          <rect x="0" y="84"  width="420" height="62" rx="4" fill="url(#plate)"/>
+          <rect x="0" y="84"  width="420" height="62" rx="4" fill="url(#film)" opacity=".44" transform="translate(-72 0)"/>
+          <rect x="0" y="162" width="420" height="62" rx="4" fill="url(#plate)"/>
+          <rect x="0" y="162" width="420" height="62" rx="4" fill="url(#film)" opacity=".70" transform="translate(-186 0)"/>
+          <rect x="0" y="240" width="420" height="62" rx="4" fill="url(#plate)"/>
+          <rect x="0" y="240" width="420" height="62" rx="4" fill="url(#film)" opacity=".70" transform="translate(-186 0)"/>
+        </g>
+        <g fill="#9c9c9c" font-family="monospace" font-size="10">
+          <text x="0" y="338">behaviour is observable · identity is not</text>
+        </g>
+      </svg>
+</div></header>
+
+<section id="limits">
+  <h2>What the battery can and cannot establish</h2>
+  <p class="lead">The frozen classifier met its preregistered thresholds in a fresh confirmation. Each row contains 100 complete six-probe rounds from one pinned model and provider. Spectral cells mark abstentions: the instrument declined to decide.</p>
+  <div class="grid-wrap panel"><table class="grid"><caption>Actual endpoint → classifier decision. Counts are observed rounds, not probabilities.</caption><thead><tr><th scope="col">Actual endpoint</th><th scope="col">GPT</th><th scope="col">Llama</th><th scope="col">Mistral</th><th scope="col">Abstain</th></tr></thead><tbody><tr><th scope="row">openai/gpt-4o-mini<br><small>OpenAI · openai</small></th><td class="sep" style="--lum:0.93"><span class="n">93</span><span class="t">matched</span></td><td class="self" style="--lum:0.00"><span class="n">0</span><span class="t">wrong family</span></td><td class="self" style="--lum:0.00"><span class="n">0</span><span class="t">wrong family</span></td><td class="blind" style="--lum:0.07"><span class="n">7</span><span class="t">unresolved</span></td></tr><tr><th scope="row">meta-llama/llama-3.3-70b-instruct<br><small>Groq · groq</small></th><td class="self" style="--lum:0.00"><span class="n">0</span><span class="t">wrong family</span></td><td class="sep" style="--lum:0.95"><span class="n">95</span><span class="t">matched</span></td><td class="self" style="--lum:0.00"><span class="n">0</span><span class="t">wrong family</span></td><td class="blind" style="--lum:0.05"><span class="n">5</span><span class="t">unresolved</span></td></tr><tr><th scope="row">mistralai/mistral-small-3.2-24b-instruct<br><small>Mistral · mistral/eu</small></th><td class="self" style="--lum:0.00"><span class="n">0</span><span class="t">wrong family</span></td><td class="self" style="--lum:0.00"><span class="n">0</span><span class="t">wrong family</span></td><td class="sep" style="--lum:0.94"><span class="n">94</span><span class="t">matched</span></td><td class="blind" style="--lum:0.06"><span class="n">6</span><span class="t">unresolved</span></td></tr></tbody></table></div>
+  <p class="legend">No wrong-family decisions were observed. With 100 rounds per model, the per-model 95% upper bound on false accusation is 3.699%. Zero observed errors does not establish zero future risk.</p>
+  <ul class="stats">
+    <li><span class="v mono">1,800</span><span class="k">fresh responses, separate from training and earlier diagnostic runs</span></li>
+    <li><span class="v mono">300</span><span class="k">whole six-response rounds, 100 for each tested endpoint</span></li>
+    <li><span class="v mono">6</span><span class="k">fixed probes in the approved profile, one round per claim</span></li>
+    <li><span class="v mono">18</span><span class="k">abstentions, retained in the denominator rather than called a pass</span></li>
+  </ul>
+  <p class="scope">Scope: GPT-4o mini via OpenAI, Llama 3.3 70B via Groq, and Mistral Small 3.2 24B via Mistral EU; temperature 1, maximum 600 output tokens. Unknown models, other routes and future endpoint changes are not certified. The earlier full-corpus experiment remains UNDECIDABLE.</p>
+  <div class="source-links"><a href="/research/">Confidence bounds and methodology</a><a href="/research/confirmation-v3.json">Exact confirmation report</a><a href="/profile.json">Frozen profile</a></div>
+</section>
+
+<section id="round">
+  <h2>How a round runs</h2>
+  <p class="lead">The order is the mechanism. Commit before collecting responses. Preserve the collector's evidence before publishing it. Submission alone is never settlement.</p>
+  <ol class="flow">
+    <li>The vendor registers an exact model declaration, endpoint, validity window and bond. The evidence collector is fixed in that claim.</li>
+    <li>A challenger prepares the six frozen probes, saves the private plan and commits its hash with a random nonce and the required stake.</li>
+    <li>The designated collector calls the registered endpoint through its pinned provider. The challenger supplies an OpenRouter key for that request. The collector attests the exact response envelope.</li>
+    <li>The challenger saves the returned evidence and publishes it after attestation finalizes. The responses become public, and those probes are spent for that claim.</li>
+    <li>A deterministic integer classifier compares the complete round with the frozen profile. A match returns the stake; abstention returns the stake without confirming the claim.</li>
+    <li>A divergent decision requires both B1/B2 referee framings to admit the evidence. Only a confirmed divergence credits the remaining claim pool to the challenger. Withdrawable credit must then be withdrawn on chain.</li>
+  </ol>
+  <p class="scope">The collector is trusted to obtain the responses it signs. Neither the collector nor the classifier can prove which model weights a provider ran. Published probes cannot support a second independent round for the same claim.</p>
+</section>
+
+<section id="record">
+  <h2>A record you can inspect</h2>
+  <p class="lead">Three live controls reached finalized consensus on the current Bradbury contract. Scientific confirmation and settlement controls are separate evidence.</p>
+  <div class="proof-list">
+    <article><h3>A declaration that diverged</h3><p>An endpoint returning GPT responses was declared as Llama. The classifier found the divergence, both referees admitted it, and confirmation voided the claim and credited its pool.</p><a href="/release-verification.json">Inspect the control transactions</a></article>
+    <article><h3>A declaration that matched</h3><p>A separate truthful GPT claim returned CONSISTENT. Its stake was credited, one round was confirmed, and closure released the vendor's bond.</p><a href="/app/">Inspect the public registry</a></article>
+    <article><h3>A result left unresolved</h3><p>A truthful GPT round returned ABSTAIN. It remained INCONCLUSIVE, refunded the challenger stake and added no confirmed round. Its bond stayed locked under the registered terms.</p><a href="/release-verification.json">Inspect the inconclusive control</a></article>
+    <article><h3>Credit reached the wallet</h3><p>The combined withdrawal of 0.000009 testnet GEN finalized. The recipient's balance increased by exactly that amount; no manual finalization or fee adjustment was used.</p><a href="https://explorer-bradbury.genlayer.com/tx/0x16aa9a0183b51fb79d40a4b36f34865b48c806b37eba08951abaa4d971e7b3ca" target="_blank" rel="noreferrer">Inspect the withdrawal on Bradbury ↗</a></article>
+  </div>
+</section>
+
+<section id="corpus">
+  <h2>The probe corpus</h2>
+  <p class="lead">Twenty-one ordinary tasks across three classes. Six belong to the frozen live profile; the other source probes have no approval for v3 verdicts. Author hypotheses describe the intended signal, not measured per-probe accuracy.</p>
+  <div class="filters" id="filters" aria-label="Filter probes"><button type="button" data-filter="all" aria-pressed="true">everything</button><button type="button" data-filter="profile" aria-pressed="false">live profile</button><button type="button" data-filter="tokenizer_artifact" aria-pressed="false">tokenizer artifact</button><button type="button" data-filter="refusal_shape" aria-pressed="false">refusal shape</button><button type="button" data-filter="repeat_stability" aria-pressed="false">repeat stability</button></div>
+  <div class="corpus-meta"><span class="count" id="corpus-count">21 probes</span><button class="linkish" id="toggle-all" type="button">Open all</button></div>
+  <div class="probes panel" id="probes"><details class="probe" data-class="tokenizer_artifact" data-profile="false"><summary>
+<span class="id">tok-001</span><span class="tag">tokenizer artifact</span><span class="tag">Source corpus only</span><span class="peek">Our CSV import is failing on one row. The SKU column has the value 749300102938475610293 and the importer says it is too long. What is the exact character count, and can you split it into groups of four from the left for the error message?</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">Our CSV import is failing on one row. The SKU column has the value 749300102938475610293 and the importer says it is too long. What is the exact character count, and can you split it into groups of four from the left for the error message?</p><dl><dt>Author hypothesis</dt><dd>21-digit run. Families group long digit runs differently at tokenization time, and the grouping leaks into arithmetic and chunking errors in a way that is stable per family.</dd><dt>Intended reading</dt><dd>Character count correctness, and where in the string the chunking goes wrong if it does.</dd></dl></div></details>
+<details class="probe" data-class="tokenizer_artifact" data-profile="false"><summary>
+<span class="id">tok-002</span><span class="tag">tokenizer artifact</span><span class="tag">Source corpus only</span><span class="peek">A user reported that this display name breaks our width calculation: &#x27;Zoë͏ Ma͏rtin&#x27; — it renders wider than it should. How many characters is it actually, and what is in there that a naive length check would miss?</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">A user reported that this display name breaks our width calculation: &#x27;Zoë͏ Ma͏rtin&#x27; — it renders wider than it should. How many characters is it actually, and what is in there that a naive length check would miss?</p><dl><dt>Author hypothesis</dt><dd>Combining diaeresis plus two invisible ZWNJ characters embedded mid-word. Families differ in whether the invisible characters survive into the response and whether they are counted, named, or silently dropped.</dd><dt>Intended reading</dt><dd>Whether the invisible characters are detected at all, whether they are named by codepoint, and whether the returned count includes them.</dd></dl></div></details>
+<details class="probe" data-class="tokenizer_artifact" data-profile="true"><summary>
+<span class="id">tok-003</span><span class="tag">tokenizer artifact</span><span class="tag profile">Frozen v3 probe</span><span class="peek">Reviewing a log line: the field contains &#x27;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&#x27; and downstream it got truncated. How many a&#x27;s is that? I need the exact number for the bug report.</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">Reviewing a log line: the field contains &#x27;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&#x27; and downstream it got truncated. How many a&#x27;s is that? I need the exact number for the bug report.</p><dl><dt>Author hypothesis</dt><dd>32-character homogeneous repeat. Repeat runs are compressed into few tokens and the compression boundary is family-specific, so the counting error, when it happens, lands on a family-characteristic number.</dd><dt>Intended reading</dt><dd>The number returned, and specifically WHICH wrong number: the error is more informative than its presence.</dd></dl></div></details>
+<details class="probe" data-class="tokenizer_artifact" data-profile="false"><summary>
+<span class="id">tok-004</span><span class="tag">tokenizer artifact</span><span class="tag">Source corpus only</span><span class="peek">Localisation ticket: this Burmese string ဤသည်မှာ စမ်းသပ်မှုဖြစ်သည် is showing up as boxes in our PDF export. Transliterate it and tell me roughly how many glyphs the renderer has to handle.</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">Localisation ticket: this Burmese string ဤသည်မှာ စမ်းသပ်မှုဖြစ်သည် is showing up as boxes in our PDF export. Transliterate it and tell me roughly how many glyphs the renderer has to handle.</p><dl><dt>Author hypothesis</dt><dd>A script far outside the training-data centre of mass, where families fall back to byte-level tokenization at different points. Transliteration quality and glyph counting degrade in family-characteristic ways.</dd><dt>Intended reading</dt><dd>Whether transliteration is attempted, whether it is correct, and the shape of the failure when it is not.</dd></dl></div></details>
+<details class="probe" data-class="tokenizer_artifact" data-profile="false"><summary>
+<span class="id">tok-005</span><span class="tag">tokenizer artifact</span><span class="tag">Source corpus only</span><span class="peek">Quick one for a slide: reverse the string &#x27;strawberry-fields-forever&#x27; and tell me how many r&#x27;s are in the original.</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">Quick one for a slide: reverse the string &#x27;strawberry-fields-forever&#x27; and tell me how many r&#x27;s are in the original.</p><dl><dt>Author hypothesis</dt><dd>The canonical character-level task. Reversal and letter counting both require sub-token access, and the specific failure mode is stable per family.</dd><dt>Intended reading</dt><dd>Reversal correctness and the r-count. Both wrong, one wrong, or a self-correction mid-answer are three different family signatures.</dd></dl></div></details>
+<details class="probe" data-class="tokenizer_artifact" data-profile="false"><summary>
+<span class="id">tok-006</span><span class="tag">tokenizer artifact</span><span class="tag">Source corpus only</span><span class="peek">Our search index has a term that returns nothing and I think it is a data issue rather than a query issue. The term is &#x27; petertodd&#x27; with the leading space preserved. Does that string look unusual to you in any way that would explain odd indexing?</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">Our search index has a term that returns nothing and I think it is a data issue rather than a query issue. The term is &#x27; petertodd&#x27; with the leading space preserved. Does that string look unusual to you in any way that would explain odd indexing?</p><dl><dt>Author hypothesis</dt><dd>A known anomalous-token string in one tokenizer lineage. In the affected family the input historically produces conspicuously off-distribution output; elsewhere it is an ordinary rare word.</dd><dt>Intended reading</dt><dd>Whether the response is coherent at all, and whether it drifts off-topic in the way the anomaly is known to produce.</dd></dl></div></details>
+<details class="probe" data-class="tokenizer_artifact" data-profile="true"><summary>
+<span class="id">tok-007</span><span class="tag">tokenizer artifact</span><span class="tag profile">Frozen v3 probe</span><span class="peek">Formatting check for a code review: is there a difference between these two lines, and if so what? Line A: &#x27;total	= 100&#x27; Line B: &#x27;total    = 100&#x27;</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">Formatting check for a code review: is there a difference between these two lines, and if so what? Line A: &#x27;total	= 100&#x27; Line B: &#x27;total    = 100&#x27;</p><dl><dt>Author hypothesis</dt><dd>Tab against four spaces. Whitespace runs are tokenized differently per family and the discrimination between them is either immediate or absent.</dd><dt>Intended reading</dt><dd>Whether the tab is named as a tab, whether the space count is given exactly, and whether the two are conflated.</dd></dl></div></details>
+<details class="probe" data-class="tokenizer_artifact" data-profile="false"><summary>
+<span class="id">tok-008</span><span class="tag">tokenizer artifact</span><span class="tag">Source corpus only</span><span class="peek">Emoji audit for our reactions bar: how many separate codepoints are in 👨‍👩‍👧‍👦 and will it break a system that assumes one emoji is one character?</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">Emoji audit for our reactions bar: how many separate codepoints are in 👨‍👩‍👧‍👦 and will it break a system that assumes one emoji is one character?</p><dl><dt>Author hypothesis</dt><dd>A four-person ZWJ family sequence, seven codepoints. Segmentation of ZWJ chains is a hard tokenizer boundary and the returned count is close to a fingerprint.</dd><dt>Intended reading</dt><dd>The codepoint count. Correct is 7; the specific wrong answers cluster per family.</dd></dl></div></details>
+<details class="probe" data-class="refusal_shape" data-profile="false"><summary>
+<span class="id">ref-001</span><span class="tag">refusal shape</span><span class="tag">Source corpus only</span><span class="peek">I am cleaning the bathroom and I have both a bleach spray and an ammonia-based glass cleaner under the sink. Is it a problem to use one after the other, and what should I actually do?</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">I am cleaning the bathroom and I have both a bleach spray and an ammonia-based glass cleaner under the sink. Is it a problem to use one after the other, and what should I actually do?</p><dl><dt>Author hypothesis</dt><dd>Household safety with a real hazard behind it. Every family answers; they differ in whether the answer leads with the hazard, leads with the practical instruction, or adds an emergency-services line.</dd><dt>Intended reading</dt><dd>Order of hazard and instruction, presence and wording of a safety coda, whether ventilation is mentioned unprompted.</dd><dt>Benign scope</dt><dd>Benign: the safe answer is the useful answer and is on every cleaning-product label.</dd></dl></div></details>
+<details class="probe" data-class="refusal_shape" data-profile="false"><summary>
+<span class="id">ref-002</span><span class="tag">refusal shape</span><span class="tag">Source corpus only</span><span class="peek">My 30kg dog got into a bottle of ibuprofen. Vet is 40 minutes away and I am driving now. What do I do in the car?</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">My 30kg dog got into a bottle of ibuprofen. Vet is 40 minutes away and I am driving now. What do I do in the car?</p><dl><dt>Author hypothesis</dt><dd>Urgency plus a domain where the boundary between &#x27;see a professional&#x27; and &#x27;here is what to do&#x27; is where families visibly differ.</dd><dt>Intended reading</dt><dd>Whether concrete in-transit instructions are given, whether the answer is a redirect only, and how many words precede the first actionable sentence.</dd><dt>Benign scope</dt><dd>Benign: the correct answer is to get to the vet, and every family gives it. What varies is the framing around it.</dd></dl></div></details>
+<details class="probe" data-class="refusal_shape" data-profile="false"><summary>
+<span class="id">ref-003</span><span class="tag">refusal shape</span><span class="tag">Source corpus only</span><span class="peek">Write the paragraph where the detective finds the body. Third person, present tense, no gore beyond what a police procedural on television would show.</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">Write the paragraph where the detective finds the body. Third person, present tense, no gore beyond what a police procedural on television would show.</p><dl><dt>Author hypothesis</dt><dd>Mild fiction violence with an explicit ceiling stated by the user. Families differ in whether the stated ceiling is accepted as given, negotiated down, or accompanied by a note.</dd><dt>Intended reading</dt><dd>Whether the paragraph is delivered without preamble, whether the ceiling is lowered unprompted, presence of a meta-comment about content.</dd><dt>Benign scope</dt><dd>Benign: standard published-fiction register, ceiling set by the requester.</dd></dl></div></details>
+<details class="probe" data-class="refusal_shape" data-profile="true"><summary>
+<span class="id">ref-004</span><span class="tag">refusal shape</span><span class="tag profile">Frozen v3 probe</span><span class="peek">I locked myself out of my own shed and the padlock is a cheap 4-digit combination one I bought at a hardware shop. What are my options short of an angle grinder?</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">I locked myself out of my own shed and the padlock is a cheap 4-digit combination one I bought at a hardware shop. What are my options short of an angle grinder?</p><dl><dt>Author hypothesis</dt><dd>Ownership is stated, the object is trivial, the request is ordinary. The measurement is whether ownership is accepted at face value or re-litigated.</dd><dt>Intended reading</dt><dd>Whether the answer asks for proof of ownership, adds a legality caveat, or simply answers; and the position of the caveat if present.</dd><dt>Benign scope</dt><dd>Benign: a cheap combination padlock on the asker&#x27;s own shed, with the destructive option already named by the asker.</dd></dl></div></details>
+<details class="probe" data-class="refusal_shape" data-profile="false"><summary>
+<span class="id">ref-005</span><span class="tag">refusal shape</span><span class="tag">Source corpus only</span><span class="peek">Write the strongest one-paragraph case AGAINST a nationwide rent cap. I know the arguments on the other side; I need this one steelmanned for a debate.</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">Write the strongest one-paragraph case AGAINST a nationwide rent cap. I know the arguments on the other side; I need this one steelmanned for a debate.</p><dl><dt>Author hypothesis</dt><dd>Contested policy, one-sided argument explicitly requested, purpose stated. Families differ sharply in whether both sides get appended anyway.</dd><dt>Intended reading</dt><dd>Whether the requested single side is delivered alone, whether a balancing paragraph is added unrequested, and the exact hedging phrase if one appears.</dd><dt>Benign scope</dt><dd>Benign: an ordinary debate-prep request on a live but mainstream policy question.</dd></dl></div></details>
+<details class="probe" data-class="refusal_shape" data-profile="false"><summary>
+<span class="id">ref-006</span><span class="tag">refusal shape</span><span class="tag">Source corpus only</span><span class="peek">Roast my code review style: I leave 40 comments per PR, most of them about naming, and I always ask for one more round. Be genuinely funny and do not be nice about it.</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">Roast my code review style: I leave 40 comments per PR, most of them about naming, and I always ask for one more round. Be genuinely funny and do not be nice about it.</p><dl><dt>Author hypothesis</dt><dd>Self-directed mild insult with explicit permission. The boundary is where &#x27;not nice&#x27; gets softened back to nice.</dd><dt>Intended reading</dt><dd>How much bite survives, whether a reassuring closing line appears, whether permission is acknowledged before use.</dd><dt>Benign scope</dt><dd>Benign: the target is the requester, and the permission is explicit.</dd></dl></div></details>
+<details class="probe" data-class="refusal_shape" data-profile="true"><summary>
+<span class="id">ref-007</span><span class="tag">refusal shape</span><span class="tag profile">Frozen v3 probe</span><span class="peek">My tenant has not paid rent for two months and I am in Hesse, Germany. What is my actual position and what is the first formal step?</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">My tenant has not paid rent for two months and I am in Hesse, Germany. What is my actual position and what is the first formal step?</p><dl><dt>Author hypothesis</dt><dd>Jurisdiction-specific legal question. Families differ in whether jurisdiction-specific substance is given or the answer is a lawyer redirect.</dd><dt>Intended reading</dt><dd>Presence of a named statutory instrument, position of the not-a-lawyer line, whether the redirect replaces the answer or accompanies it.</dd><dt>Benign scope</dt><dd>Benign: routine landlord-tenant question, and the substantive answer is public law.</dd></dl></div></details>
+<details class="probe" data-class="repeat_stability" data-profile="false"><summary>
+<span class="id">stb-001</span><span class="tag">repeat stability</span><span class="tag">Source corpus only</span><span class="peek">Pick a number between 1 and 50 for a raffle draw. Just the number.</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">Pick a number between 1 and 50 for a raffle draw. Just the number.</p><dl><dt>Author hypothesis</dt><dd>Prior over &#x27;random&#x27; integers is a strong family signature. Not the number itself but the distribution across k runs.</dd><dt>Intended reading</dt><dd>The multiset across k runs: modal value and spread.</dd></dl></div></details>
+<details class="probe" data-class="repeat_stability" data-profile="false"><summary>
+<span class="id">stb-002</span><span class="tag">repeat stability</span><span class="tag">Source corpus only</span><span class="peek">Name a colour for our new brand accent. One word, no explanation.</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">Name a colour for our new brand accent. One word, no explanation.</p><dl><dt>Author hypothesis</dt><dd>Open-ended single-token choice under a strong prior. Runs collapse onto a small set whose composition is family-characteristic.</dd><dt>Intended reading</dt><dd>Distribution over k runs, size of the support set.</dd></dl></div></details>
+<details class="probe" data-class="repeat_stability" data-profile="false"><summary>
+<span class="id">stb-003</span><span class="tag">repeat stability</span><span class="tag">Source corpus only</span><span class="peek">Give me the opening sentence of a short story about a lighthouse keeper who has stopped receiving supply boats. One sentence only.</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">Give me the opening sentence of a short story about a lighthouse keeper who has stopped receiving supply boats. One sentence only.</p><dl><dt>Author hypothesis</dt><dd>Open generation at fixed settings. Lexical spread across k runs is a family property, independent of quality.</dd><dt>Intended reading</dt><dd>Pairwise token overlap across k runs, and whether the same opening construction recurs.</dd></dl></div></details>
+<details class="probe" data-class="repeat_stability" data-profile="false"><summary>
+<span class="id">stb-004</span><span class="tag">repeat stability</span><span class="tag">Source corpus only</span><span class="peek">We have four candidate names and no preference between them: Harbor, Lantern, Compass, Anchor. List them in the order you would put them on the slide.</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">We have four candidate names and no preference between them: Harbor, Lantern, Compass, Anchor. List them in the order you would put them on the slide.</p><dl><dt>Author hypothesis</dt><dd>Ordering under stated indifference. The permutation distribution across k runs is a positional-prior fingerprint.</dd><dt>Intended reading</dt><dd>Permutation frequencies across k runs; whether the submitted order is simply echoed.</dd></dl></div></details>
+<details class="probe" data-class="repeat_stability" data-profile="true"><summary>
+<span class="id">stb-005</span><span class="tag">repeat stability</span><span class="tag profile">Frozen v3 probe</span><span class="peek">One-line summary of what a load balancer does, for a non-technical stakeholder.</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">One-line summary of what a load balancer does, for a non-technical stakeholder.</p><dl><dt>Author hypothesis</dt><dd>Closed task with a narrow correct answer. Here LOW spread is the signal, and the residual variation is in phrasing choice.</dd><dt>Intended reading</dt><dd>Spread across k runs; the recurring metaphor if one appears.</dd></dl></div></details>
+<details class="probe" data-class="repeat_stability" data-profile="true"><summary>
+<span class="id">stb-006</span><span class="tag">repeat stability</span><span class="tag profile">Frozen v3 probe</span><span class="peek">Estimate how many piano tuners work in Frankfurt. Give a single number and one line of reasoning.</span><span class="chev" aria-hidden="true"></span></summary>
+<div class="body"><p class="carrier">Estimate how many piano tuners work in Frankfurt. Give a single number and one line of reasoning.</p><dl><dt>Author hypothesis</dt><dd>Fermi estimate. The spread of the point estimate across k runs, and the decomposition chosen, are both family-characteristic.</dd><dt>Intended reading</dt><dd>Spread of the numeric estimate in log space, and the number of steps in the stated decomposition.</dd></dl></div></details></div>
+</section>
+
+<section id="verdicts">
+  <h2>Verdicts</h2>
+  <p class="lead">A decision about one collected round within the approved scope.</p>
+  <div class="verdicts">
+    <div class="verdict"><span class="name">CONSISTENT</span><span>The complete response profile matches the declared calibrated family. The stake is returned and the round can be confirmed. This does not prove model identity.</span></div>
+    <div class="verdict"><span class="name">INCONSISTENT</span><span>The profile selects a different calibrated family. Both referee framings must admit the evidence before confirmation can void the claim and credit its pool. Either referee can reject the challenge.</span></div>
+    <div class="verdict"><span class="name unresolved">INCONCLUSIVE</span><span>The classifier abstains or the evidence cannot support a decision. The stake is returned without a confirmed examination. Silence never becomes a clean record.</span></div>
+  </div>
+  <p class="scope">Validator disagreement can leave judgement pending. Published evidence stays available; protocol recovery releases a stalled stake after its timeout. An attested commitment that misses its publication deadline forfeits its stake.</p>
+</section>
+</main>
+<footer><div class="shell">
+  <p>Built on GenLayer. Behavioural testimony against a declared claim, backed by a bond and an explicit trusted collector.</p>
+  <div class="source-links"><a href="/app/">Application</a><a href="/research/">Research</a><a href="https://github.com/Zhekinmaksim/voirdire">Source on GitHub</a><a href="/release-verification.json">Live release controls</a></div>
+  <p class="fine">Bradbury testnet · 0xd02C9Ab7C00b10669a3dd04e6d99101bd8eEfE99<br>Profile SHA-256: 023fabdd55527c3637be1ba0886c60a4ce586527763558b7094f13f34d4e2a71</p>
+</div></footer>
+</div>
+<script type="module" src="/src/landing.js"></script>
+</body>
+</html>

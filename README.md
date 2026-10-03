@@ -5,11 +5,18 @@ GenLayer Bradbury. This is behavioural testimony, **not proof of model identity*
 Bradbury uses testnet GEN; this repository is not a real-money deployment.
 
 - Website: https://voirdire-mu.vercel.app
+- Working application: https://voirdire-mu.vercel.app/app/
 - Source: https://github.com/Zhekinmaksim/voirdire
 - Contract deployment configuration: `public/deployment.json`
 - Full contract source: `chain-and-site/contracts/voirdire.py`
 - Verified release boundaries: [PRODUCTION_STATUS.md](PRODUCTION_STATUS.md)
 - Live v3 controls and finalized native payout: [release-verification.json](public/release-verification.json)
+
+The main page restores the original obsidian, brushed-metal and interference-film
+design. Its table shows the fresh v3 confirmation counts, not fixture separation
+scores. The working registry is at `/app/` in the same visual system; research
+and release evidence remain at their existing URLs. The landing page is generated
+from `app/home.tpl.html` only after the release bindings pass `prepare_web.py`.
 
 ## Product flow
 
@@ -140,3 +147,6 @@ claims are immutable; changing the site address does not move old deposits.
 `film/` contains the Remotion project; `voirdire-60s.mp4` is the original film.
 Its figures are synthetic historical illustrations, not current product evidence.
 It is excluded from deployment. Render with `cd film && npm ci && npm run render`.
+The full composition was re-rendered and decoded successfully during the current
+review; see [film/AUDIT.md](film/AUDIT.md) for outdated captions and font fallback
+limitations that must be addressed before a current launch cut.
