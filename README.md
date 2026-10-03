@@ -8,6 +8,7 @@ Bradbury uses testnet GEN; this repository is not a real-money deployment.
 - Source: https://github.com/Zhekinmaksim/voirdire
 - Contract deployment configuration: `public/deployment.json`
 - Full contract source: `chain-and-site/contracts/voirdire.py`
+- Verified release boundaries and remaining blockers: [PRODUCTION_STATUS.md](PRODUCTION_STATUS.md)
 
 ## Product flow
 
@@ -23,8 +24,9 @@ Bradbury uses testnet GEN; this repository is not a real-money deployment.
    Attestation can be retried from the saved bundle without buying new responses.
 7. After attestation finalizes, publish the exact evidence. This deterministic
    step records the responses and burns the probes without asking an LLM.
-8. Request judgement on the published round. GenLayer produces per-class
-   readings. Confirm an admissible divergent round, then withdraw credits.
+8. Request judgement on the published round. GenLayer attempts an experimental
+   per-class judgement; it may fail to reach consensus. Confirm an admissible
+   divergent round, then withdraw credits.
    If validators do not agree, the evidence remains public and the round stays
    pending; it is not counted as an examination. The recovery timeout still
    releases its stake according to the protocol.
@@ -101,8 +103,9 @@ Raw responses, costs, generation IDs, models and providers are retained in ignor
 run files. Merge explicitly with `merge_runs.py`; do not concatenate headers.
 
 A fixture must produce `UNDECIDABLE` and exit 2. The operational app publishes no
-synthetic model scores. `/research/` shows unavailable measurements until a live
-matrix passes the gate. Contract testimony and statistical calibration are
+synthetic model scores. `/research/` publishes the completed UNDECIDABLE run and
+its diagnostics. No approved classifier or matrix is available.
+Contract testimony and statistical calibration are
 separate: a working claim lifecycle does not establish classification accuracy.
 
 ## Protocol v2 and recovery

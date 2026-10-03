@@ -17,6 +17,12 @@ writes compare ETags. Ambiguous writes stop submission. The journal is capped
 at 64 KiB, with three CAS attempts and 24 storage operations per request. The
 pinned SDK's internal retries are disabled. No model or signing keys are stored.
 
+Compressed reads can return a weak transport ETag. Recovery then re-reads an
+uncompressed, uncached representation and uses its strong ETag with that exact
+body. Never remove the `W/` prefix to manufacture a version for a conditional
+write. This recovery path was exercised against production storage without
+signing a replacement transaction.
+
 The signing boundary therefore requires both production environment variables:
 
 - `COLLECTOR_MAX_NONCE`: exclusive absolute EVM nonce ceiling. A transaction with
