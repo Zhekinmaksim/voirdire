@@ -149,3 +149,43 @@ test('optional provider price limits are enforced in every upstream request',asy
   }
   assert.equal(requests,2);
 });
+
+test('gas cushion is applied before signing and cannot bypass sponsorship ceiling',async()=>{
+  const { boundedAccount } = await import('../lib/collector.mjs');
+  let signedTransaction,diagnostic;
+  const account=boundedAccount({signTransaction:async tx=>{signedTransaction=tx;return '0x1234'}},{maxNonce:'21',maxFeeWei:'10000'},d=>diagnostic=d);
+  await account.signTransaction({nonce:2,gas:101n,gasPrice:1n,value:0n});
+  assert.equal(signedTransaction.gas,127n);
+  assert.equal(diagnostic.nonce,'2');assert.match(diagnostic.evmTransactionHash,/^0x[a-f0-9]{64}$/);
+  assert.equal(JSON.stringify(diagnostic).includes('1234'),false);
+  await assert.rejects(()=>account.signTransaction({nonce:3,gas:9000n,gasPrice:1n,value:0n}),/fee limit/);
+});
+
+test('post-sign failures return public EVM hash and suppress same-instance retries',async()=>{
+  const env=plan(),ctx=context(env);let writes=0;
+  ctx.sponsorship={lastSigned:null};ctx.client.readContract=async()=>commitment(env);
+  ctx.client.writeContract=async()=>{writes++;ctx.sponsorship.lastSigned={nonce:'2',evmTransactionHash:`0x${'55'.repeat(32)}`};throw new Error('Transaction reverted: EVM tx internal details');};
+  const handler=attestHandler({setup:()=>ctx,validate:async()=>({commitment:commitment(env)})});
+  const body={envelope:env,commitId:0,proof:proofFor(ctx.key,address,0,env)};
+  for(let i=0;i<2;i++){
+    const out=await invoke(handler,body);assert.equal(out.status,502);assert.equal(out.body.outcome,'reverted');
+    assert.equal(out.body.evmTransactionHash,`0x${'55'.repeat(32)}`);assert.ok(!out.body.error.includes('internal'));
+  }
+  assert.equal(writes,1);
+});
+
+test('cached reverted submissions retry only when EVM receipt confirms the same failed hash',async()=>{
+  const env=plan(),ctx=context(env),evmHash=`0x${'66'.repeat(32)}`;let writes=0,receipt=null;
+  ctx.sponsorship={lastSigned:null};ctx.client.readContract=async()=>commitment(env);
+  ctx.client.request=async({method,params})=>{assert.equal(method,'eth_getTransactionReceipt');assert.deepEqual(params,[evmHash]);return receipt};
+  ctx.client.writeContract=async()=>{writes++;ctx.sponsorship.lastSigned={nonce:String(writes),evmTransactionHash:evmHash};throw new Error('Transaction reverted: EVM tx '+evmHash)};
+  const handler=attestHandler({setup:()=>ctx,validate:async()=>({commitment:commitment(env)})});
+  const body={envelope:env,commitId:0,proof:proofFor(ctx.key,address,0,env)};
+  assert.equal((await invoke(handler,body)).status,502);
+  for(const value of [null,{status:'0x1',transactionHash:evmHash},{status:'0x0',transactionHash:`0x${'77'.repeat(32)}`}]){
+    receipt=value;assert.equal((await invoke(handler,body)).status,502);assert.equal(writes,1);
+  }
+  receipt={status:'0x0',transactionHash:evmHash};
+  const retry=await invoke(handler,body);assert.equal(retry.status,502);assert.equal(writes,2);
+  assert.ok(retry.body.error.includes(evmHash));
+});

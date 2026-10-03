@@ -53,3 +53,20 @@ test('receipt lifecycle and execution result are reported separately',()=>{
  assert.match(receiptSummary({statusName:'FINALIZED'}).detail,/not reported/);
  assert.equal(receiptSummary(null).status,'Pending');
 });
+
+import {evmReceiptSummary, attestationFailureRecord} from '../app/src/lifecycle.js';
+test('EVM receipt states never claim Intelligent Contract settlement',()=>{
+ assert.equal(evmReceiptSummary(null).status,'EVM pending');
+ assert.match(evmReceiptSummary(null).detail,/Do not resubmit/);
+ assert.equal(evmReceiptSummary({status:'0x0'}).status,'EVM reverted');
+ assert.equal(evmReceiptSummary({status:'0x1'}).status,'EVM mined');
+ assert.match(evmReceiptSummary({status:'0x1'}).detail,/does not mean.*settled/);
+ assert.equal(evmReceiptSummary({}).status,'EVM unknown');
+});
+test('collector failure retains a validated EVM hash with its commitment context',()=>{
+ const hash='0x'+'a'.repeat(64);
+ const record=attestationFailureRecord({error:'Submission failed.',evmTransactionHash:hash,outcome:'unknown'},'0xcontract',12,'now');
+ assert.equal(record.kind,'evm');assert.equal(record.hash,hash);assert.equal(record.commitId,12);assert.equal(record.status,'EVM unknown');
+ assert.equal(attestationFailureRecord({evmTransactionHash:hash,outcome:'reverted'},'0xcontract',12).status,'EVM reverted');
+ assert.equal(attestationFailureRecord({evmTransactionHash:'invalid'},'0xcontract',12),null);
+});

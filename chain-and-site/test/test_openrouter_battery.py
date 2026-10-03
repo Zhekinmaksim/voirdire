@@ -219,6 +219,62 @@ class BatteryTests(unittest.TestCase):
         self.assertEqual(O.select_endpoint(data,"stable/bf16"),other)
         with self.assertRaises(ValueError): O.select_endpoint(data,"missing")
 
+    def recovery_policy(self, **changes):
+        return {"max_retries":12,"max_identity_retries":2,"cooldown_seconds":60,**changes}
+
+    def failed_events(self, code=429, identity="x"):
+        return [{"event":"reserved","identity":identity,"reservation_usd":"0.1"},
+                {"event":"failed","identity":identity,"http_status":code,"retry_after":"120"}]
+
+    def test_recovery_persists_allowance_and_respects_retry_after(self):
+        with tempfile.TemporaryDirectory() as d:
+            out=Path(d);events=self.failed_events();policy=self.recovery_policy()
+            self.assertEqual(O.authorize_recovery(out,events,policy,current=100),220)
+            self.assertEqual(O.authorize_recovery(out,events,policy,current=110),220)
+            self.assertEqual(len(O.records(out/"recovery.jsonl")),2)
+            with self.assertRaises(ValueError):
+                O.authorize_recovery(out,events,self.recovery_policy(max_retries=11),current=110)
+
+    def test_recovery_rejects_non429_and_third_same_identity(self):
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaises(ValueError):
+                O.authorize_recovery(Path(d),self.failed_events(503),self.recovery_policy(),100)
+        with tempfile.TemporaryDirectory() as d:
+            out=Path(d);events=[];policy=self.recovery_policy()
+            for attempt in range(2):
+                events += self.failed_events()
+                O.authorize_recovery(out,events,policy,current=100+attempt*1000)
+                events.append({"event":"resolved_failed","identity":"x","cost_usd":"0.1"})
+            events += self.failed_events()
+            with self.assertRaises(ValueError): O.authorize_recovery(out,events,policy,current=5000)
+            self.assertEqual(len(O.records(out/"recovery.jsonl")),3)
+
+    def test_recovery_global_limit_cannot_reset_on_restart(self):
+        with tempfile.TemporaryDirectory() as d:
+            out=Path(d);events=[];policy=self.recovery_policy(max_retries=1)
+            events += self.failed_events(identity="first")
+            O.authorize_recovery(out,events,policy,100)
+            events.append({"event":"resolved_failed","identity":"first","cost_usd":"0.1"})
+            events += self.failed_events(identity="second")
+            with self.assertRaises(ValueError): O.authorize_recovery(out,events,policy,1000)
+
+    def test_supervisor_charges_and_waits_before_resuming(self):
+        with tempfile.TemporaryDirectory() as d:
+            out=Path(d)
+            for e in self.failed_events(): O.append(out/"ledger.jsonl",e)
+            clock=[100.]
+            def sleep(delay):
+                self.assertLessEqual(delay,60)
+                clock[0]+=delay
+            def run(*args,**kwargs):
+                self.assertEqual(clock[0],220.)
+                spend,pending,_=O.budget_state(O.records(out/"ledger.jsonl"))
+                self.assertEqual(spend,O.money("0.1"))
+                self.assertFalse(pending)
+                return 0
+            with patch.object(O.time,"time",side_effect=lambda:clock[0]), patch.object(O.time,"sleep",side_effect=sleep), patch.object(O,"run",side_effect=run), contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(O.supervise(self.plan(),out,"1","secret"),0)
+
     def test_bad_budget_fails(self):
         for value in ["NaN","Infinity","-1"]:
             with self.assertRaises(ValueError): O.money(value)

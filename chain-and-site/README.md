@@ -163,6 +163,15 @@ all already-running responses before exiting. A stopped or ambiguous request is 
 retried automatically; inspect its ledger and billing first. Use an independently
 capped OpenRouter key for an account-wide limit. Estimates are not billing guarantees.
 
+For an explicitly authorized recovery policy, `supervise` can resume the same
+plan after HTTP 429 only. It first drains in-flight calls, charges the failed
+request's full reservation, and waits at least 60 seconds or `Retry-After`.
+The recovery count survives restarts; at most two retries are allowed for one
+logical sample. Other errors stop the run. For example, replace `run` above with
+`supervise --max-retries 12 --cooldown 60 --min-interval 1.2`; keep the original
+output directory and budget. Changing providers requires a new preregistered
+dataset and deducting all previous expenses from the account-wide allowance.
+
 ## Probe classes
 
 Three are judged in this version. Two more are in the vocabulary so a corpus can

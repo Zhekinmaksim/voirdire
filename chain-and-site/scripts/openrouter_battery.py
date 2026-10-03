@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 import datetime as dt
+from email.utils import parsedate_to_datetime
 from decimal import Decimal
 import fcntl
 import hashlib
@@ -384,6 +385,100 @@ def run_locked(plan, out, budget, key, max_calls, concurrency=1, min_interval=1.
     return 0
 
 
+def retry_delay(value, current):
+    """Return server-requested seconds, accepting numeric or HTTP-date headers."""
+    if value is None:
+        return 0.0
+    try:
+        seconds = float(value)
+        if not 0 <= seconds < float("inf"):
+            raise ValueError("invalid Retry-After")
+        return seconds
+    except (TypeError, ValueError):
+        try:
+            date = parsedate_to_datetime(str(value))
+            if date.tzinfo is None:
+                date = date.replace(tzinfo=dt.timezone.utc)
+            return max(0.0, date.timestamp() - current)
+        except (TypeError, ValueError, OverflowError):
+            raise ValueError("unrecognized Retry-After; manual review required") from None
+
+
+def authorize_recovery(out, events, policy, current=None):
+    """Persist an explicit supervisor decision before charging a failed attempt.
+
+    Failure line numbers identify attempts, including repeated logical IDs.
+    Replay never resets the global or per-identity recovery allowance.
+    """
+    current = time.time() if current is None else current
+    _, pending, _ = budget_state(events)
+    journal = out / "recovery.jsonl"
+    history = records(journal)
+    expected = {"event": "policy", **policy}
+    if not history:
+        append(journal, expected)
+        history = [expected]
+    elif history[0] != expected:
+        raise ValueError("recovery policy differs from saved policy; refusing allowance reset")
+    latest = {e["identity"]: (i, e) for i, e in enumerate(events)}
+    for identity in pending:
+        _, failure = latest[identity]
+        if failure["event"] != "failed" or failure.get("http_status") != 429:
+            raise ValueError("unresolved non-429 or undrained request; no supervised retry")
+    authorizations = [e for e in history if e["event"] == "authorized_429_recovery"]
+    by_attempt = {e["failure_line"]: e for e in authorizations}
+    counts = {}
+    for e in authorizations:
+        counts[e["identity"]] = counts.get(e["identity"], 0) + 1
+    additions = [(identity, *latest[identity]) for identity in pending if latest[identity][0] not in by_attempt]
+    if len(authorizations) + len(additions) > policy["max_retries"]:
+        raise ValueError("429 recovery allowance exhausted")
+    for identity, _, _ in additions:
+        if counts.get(identity, 0) >= policy["max_identity_retries"]:
+            raise ValueError("429 recovery allowance exhausted for " + identity)
+    for identity, index, failure in additions:
+        delay = max(policy["cooldown_seconds"], retry_delay(failure.get("retry_after"), current))
+        event = {"event": "authorized_429_recovery", "identity": identity, "failure_line": index,
+                 "reservation_usd": str(pending[identity]), "authorized_at": current,
+                 "not_before": current + delay, "at": now()}
+        append(journal, event)
+        by_attempt[index] = event
+    return max((by_attempt[latest[identity][0]]["not_before"] for identity in pending), default=current)
+
+
+def supervise(plan, out, budget, key, concurrency=9, min_interval=1.2,
+              max_retries=12, cooldown=60):
+    """Explicit bounded recovery policy; no unaccounted or hidden network retries."""
+    if type(max_retries) is not int or not 0 <= max_retries <= 12 or not 60 <= cooldown < float("inf"):
+        raise ValueError("supervisor requires at most 12 recoveries and cooldown >=60 seconds")
+    out.mkdir(parents=True, exist_ok=True)
+    policy = {"version": 1, "max_retries": max_retries, "max_identity_retries": 2,
+              "cooldown_seconds": cooldown, "budget_usd": str(money(budget)),
+              "concurrency": concurrency, "min_interval": min_interval,
+              "plan_sha256": hashlib.sha256(json.dumps(plan, sort_keys=True).encode()).hexdigest()}
+    with (out / ".supervisor.lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        while True:
+            events = records(out / "ledger.jsonl")
+            _, pending, _ = budget_state(events)
+            due = authorize_recovery(out, events, policy)
+            if pending:
+                print("RECOVERY: %d upstream 429 attempts; full reservations will be charged after cooldown" % len(pending), flush=True)
+                while time.time() < due:
+                    time.sleep(min(60.0, max(0.0, due - time.time())))
+                for identity in pending:
+                    reconcile(out, identity, True)
+            try:
+                return run(plan, out, budget, key, concurrency=concurrency, min_interval=min_interval)
+            except RuntimeError:
+                # Next iteration independently inspects drained errors and the
+                # persistent allowance. Keyboard interruption with no failed
+                # requests is never interpreted as permission to restart.
+                _, remaining, _ = budget_state(records(out / "ledger.jsonl"))
+                if not remaining:
+                    raise
+
+
 def status(out):
     plan = json.loads((out / "plan.json").read_text())
     events = records(out / "ledger.jsonl")
@@ -396,6 +491,10 @@ def status(out):
               "failed_pending": [identity for identity in pending if latest[identity]["event"] == "failed"],
               "by_family": {family: sum(r["family"] == family for r in completed.values())
                             for family in plan["families"]}}
+    history = records(out / "recovery.jsonl")
+    if history:
+        result["authorized_429_recoveries"] = sum(e["event"] == "authorized_429_recovery" for e in history)
+        result["max_429_recoveries"] = history[0]["max_retries"]
     print(json.dumps(result, indent=2))
     return 0
 
@@ -417,6 +516,15 @@ def main():
     r.add_argument("--max-calls", type=int)
     r.add_argument("--concurrency", type=int, default=1, help="simultaneous requests, 1..32; shared reserved budget")
     r.add_argument("--min-interval", type=float, default=1.2, help="minimum seconds between request starts per model; default 1.2 (50 RPM)")
+    v = sub.add_parser("supervise", help="explicitly authorize bounded, logged, full-charge 429 recovery")
+    v.add_argument("--plan", type=Path, required=True)
+    v.add_argument("--out", type=Path, required=True)
+    v.add_argument("--budget", type=money, required=True)
+    v.add_argument("--env", type=Path, default=ROOT.parent / ".env")
+    v.add_argument("--concurrency", type=int, default=9)
+    v.add_argument("--min-interval", type=float, default=1.2)
+    v.add_argument("--max-retries", type=int, default=12)
+    v.add_argument("--cooldown", type=float, default=60)
     c = sub.add_parser("reconcile", help="explicitly debit the full ceiling of one failed attempt")
     c.add_argument("--out", type=Path, required=True)
     c.add_argument("--identity", required=True)
@@ -425,6 +533,9 @@ def main():
     t.add_argument("--out", type=Path, required=True)
     args = ap.parse_args()
     try:
+        if args.command == "supervise":
+            return supervise(json.loads(args.plan.read_text()), args.out, args.budget, load_key(args.env),
+                             args.concurrency, args.min_interval, args.max_retries, args.cooldown)
         if args.command == "status":
             return status(args.out)
         if args.command == "reconcile":

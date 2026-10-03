@@ -75,7 +75,9 @@ try {
     let result;
     if(process.argv.includes('--remote')){
       const response=await fetch('https://voirdire-mu.vercel.app/api/attest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-      result=await response.json();if(!response.ok)throw new Error(result.error||'Hosted collector failed');
+      result=await response.json();
+      (state.attestationAttempts??=[]).push({at:new Date().toISOString(),status:response.status,result});save();
+      if(!response.ok)throw new Error((result.error||'Hosted collector failed')+(result.evmTransactionHash?' EVM: '+result.evmTransactionHash:''));
     }else result=await invoke(attest,body);
     state.transactions.push({functionName:'attest_evidence',hash:result.transactionHash});save();console.log(json(result));
   }else if(command==='reveal'){

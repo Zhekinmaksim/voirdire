@@ -31,3 +31,18 @@ export function receiptSummary(receipt) {
     : `Network lifecycle: ${status}. ${execution ? `Execution result: ${execution}. ` : ''}Submission or a readable state does not mean final settlement.`;
   return {status,detail};
 }
+
+export function evmReceiptSummary(receipt) {
+  if (!receipt) return {status:'EVM pending', detail:'No EVM receipt yet. Do not resubmit: the original transaction may still be mined. Your saved evidence and proof remain available.'};
+  const status=receipt.status;
+  if (status==='0x0'||status===0||status===0n||status==='reverted') return {status:'EVM reverted', detail:'The EVM transaction reverted. No successful Intelligent Contract submission is established. Keep the saved evidence and inspect the failure before retrying.'};
+  if (status==='0x1'||status===1||status===1n||status==='success') return {status:'EVM mined', detail:'EVM execution succeeded. This does not mean the Intelligent Contract transaction is settled. Recover the commitment and verify its attestation before proceeding; do not blindly resubmit.'};
+  return {status:'EVM unknown', detail:'The EVM receipt has no recognized execution status. Keep the saved evidence and do not resubmit until the original transaction is resolved.'};
+}
+export function attestationFailureRecord(result, contract, commitId, time=new Date().toISOString()) {
+  if (!/^0x[\da-f]{64}$/i.test(result?.evmTransactionHash||'')) return null;
+  return {kind:'evm',hash:result.evmTransactionHash,label:'Collector attestation · EVM submission',contract,commitId,time,
+    status:result.outcome==='reverted'?'EVM reverted':'EVM unknown',
+    error:typeof result.error==='string'?result.error:'Collector submission could not be confirmed.',
+    detail:'This hash tracks the EVM submission, not an Intelligent Contract transaction ID. Keep the saved evidence and proof. Check status before any retry.'};
+}

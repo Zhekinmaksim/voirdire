@@ -16,7 +16,8 @@ The signing boundary therefore requires both production environment variables:
 - `COLLECTOR_MAX_NONCE`: exclusive absolute EVM nonce ceiling. A transaction with
   nonce equal to or above this ceiling is refused before signing.
 - `COLLECTOR_MAX_TX_FEE_WEI`: maximum `gas × gasPrice` (or EIP-1559 max fee)
-  per transaction, in native-token wei. Nonzero value transfers are refused.
+  per transaction, in native-token wei. A 25% gas-estimate cushion is included
+  before this fee check. Nonzero value transfers are refused.
 
 No default allowance is granted. Missing or malformed limits disable collection
 and attestation until an operator configures them. Never automatically raise
@@ -79,6 +80,14 @@ reported without automatic retry. An ACCEPTED receipt is provisional, not final.
 
 Verification of the current implementation: 121 contract state-machine checks
 also pass against the exact-source deployment wrapper. JavaScript tests cover
-12 collector cases, four finalization safety cases, and seven browser protocol
-cases (23 total). These are automated logic tests; successful deployment and
+15 collector cases plus finalization safety and browser protocol cases. These are automated logic tests; successful deployment and
 live consensus adjudication require separate network receipts.
+
+The signer records only the public EVM transaction hash and nonce before
+broadcast. If SDK submission or receipt decoding fails after signing, the API
+returns that hash and a reverted/unknown outcome. Inspect the EVM receipt before
+retrying. Same-instance signed failures are cached. A later request can retry a known
+reverted submission only after RPC confirms status `0x0` for that exact EVM
+hash. Missing receipts, successful EVM receipts, and unknown outcomes cannot
+authorize a resubmission. Restarts still require operator or client receipt
+recovery before repeating the request.

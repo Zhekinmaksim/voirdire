@@ -9,10 +9,22 @@ export function createHandler(deps = {}) {
   // prior submitted transaction before assigning the next signer nonce.
   const submissions = new Map();
   let signerQueue = Promise.resolve();
+  const failure = (error, context) => {
+    const signed = context?.sponsorship?.lastSigned;
+    if (!signed) return null;
+    const reverted = String(error.message).startsWith('Transaction reverted: EVM tx ');
+    return {
+      error: reverted ? `Attestation EVM transaction reverted: ${signed.evmTransactionHash}. Inspect its receipt before retrying.` : `Attestation submission outcome is uncertain: ${signed.evmTransactionHash}. Inspect the EVM transaction before retrying.`,
+      evmTransactionHash: signed.evmTransactionHash,
+      outcome: reverted ? 'reverted' : 'unknown',
+    };
+  };
   return async function handler(req, res) {
     if (req.method !== 'POST') return response(res, 405, { error: 'POST required' });
+    let context;
     try {
-      const body = bodyOf(req), context = getContext();
+      const body = bodyOf(req);
+      context = getContext();
       const { commitment } = await check(body, context);
       const address = context.deployment.contractAddress;
       if (!validProof(proofFor(context.key, address, body.commitId, body.envelope), body.proof)) throw new PublicError('Only evidence obtained by this collector may be attested');
@@ -24,10 +36,27 @@ export function createHandler(deps = {}) {
         return response(res, 200, { alreadyAttested: true, evidenceDigest });
       }
       for (const [key, job] of submissions) if (job.expiresAt < Date.now() / 1000) submissions.delete(key);
-      const existing = submissions.get(jobKey);
+      let existing = submissions.get(jobKey);
+      if (existing?.failure?.outcome === 'reverted') {
+        // A new user request may retry only after the chain confirms that the
+        // previous EVM transaction reverted. Null/success/lookup errors cannot
+        // release this guard: successful EVM execution may still await IC state.
+        try {
+          const receipt = await context.client.request({ method: 'eth_getTransactionReceipt', params: [existing.failure.evmTransactionHash] });
+          if (receipt?.status === '0x0' && receipt.transactionHash?.toLowerCase() === existing.failure.evmTransactionHash.toLowerCase()) {
+            submissions.delete(jobKey);
+            existing = null;
+          }
+        } catch { /* Preserve recovery state when RPC cannot confirm failure. */ }
+      }
       if (existing) {
         if (existing.evidenceDigest !== evidenceDigest) throw new PublicError('Another evidence bundle is already being attested');
-        return response(res, 200, await existing.promise);
+        if (existing.failure) return response(res, 502, existing.failure);
+        try { return response(res, 200, await existing.promise); }
+        catch (error) {
+          if (existing.failure) return response(res, 502, existing.failure);
+          throw error;
+        }
       }
       // Refuse overload rather than evicting unfinalized jobs and risking repeats.
       if (submissions.size >= 256) throw new PublicError('Collector submission queue is full; retry after existing transactions settle');
@@ -45,7 +74,16 @@ export function createHandler(deps = {}) {
       submissions.set(jobKey, { evidenceDigest, promise, expiresAt: Number(commitment.expires_at) });
       signerQueue = promise;
       try { return response(res, 200, await promise); }
-      catch (error) { submissions.delete(jobKey); throw error; }
+      catch (error) {
+        const diagnostic = failure(error, context);
+        if (diagnostic) {
+          submissions.get(jobKey).failure = diagnostic;
+          console.log(JSON.stringify({ event: 'collector_submission_failed', commitId: body.commitId, ...diagnostic }));
+          return response(res, 502, diagnostic);
+        }
+        submissions.delete(jobKey);
+        throw error;
+      }
     } catch (error) { return response(res, 400, { error: safeError(error) }); }
   };
 }
