@@ -42,8 +42,10 @@ Python caches, environment files, private round envelopes, and live run files
 are ignored by Git. The film remains in the repository but is excluded from
 Vercel uploads. Connect `voirdire.pro` in Vercel Domains after deployment.
 
-GitHub push, Vercel deployment, and domain configuration have not been performed
-in this checkout.
+Published demo: https://voirdire-mu.vercel.app
+Repository: https://github.com/Zhekinmaksim/voirdire
+Vercel is connected to the repository for subsequent deployments.
+The custom domain `voirdire.pro` is not configured yet.
 
 ---
 
