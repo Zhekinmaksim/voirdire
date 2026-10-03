@@ -9,6 +9,7 @@ Bradbury uses testnet GEN; this repository is not a real-money deployment.
 - Contract deployment configuration: `public/deployment.json`
 - Full contract source: `chain-and-site/contracts/voirdire.py`
 - Verified release boundaries: [PRODUCTION_STATUS.md](PRODUCTION_STATUS.md)
+- Live v3 controls and finalized native payout: [release-verification.json](public/release-verification.json)
 
 ## Product flow
 

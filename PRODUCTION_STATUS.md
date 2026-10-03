@@ -1,6 +1,7 @@
 # Release verification — 3 October 2026
 
-The v3 statistical gate passed. Live economic verification is in progress.
+The v3 statistical gate and live economic controls passed. The browser submitted
+the native withdrawal; finalized wallet arrival was verified exactly.
 This release uses Bradbury test GEN and a trusted collector. It is not proof
 of model identity or a deployment for real-money stakes.
 
@@ -19,7 +20,7 @@ model/provider: GPT-4o-mini/OpenAI, Llama 3.3 70B/Groq, Mistral Small 3.2/Mistra
 Correct/all counts are 93/100, 95/100 and 94/100. Other outcomes abstained, with
 zero observed wrong-family labels. Per-model correct/all lower95 bounds are
 86.250%, 88.825%, 87.523%; false-accusation upper95 is 3.699% for each.
-The fixed thresholds (75% and10%) and all profile parameters stayed unchanged.
+The fixed thresholds (75% and 10%) and all profile parameters stayed unchanged.
 
 This validates the frozen six-probe classifier within those model/provider
 combinations and observation period. It does not certify unknown detection,
@@ -31,7 +32,7 @@ gate source and original compressed comparison data are published for audit.
 ## Verified deployment and hosted collection
 
 The final contract deployed with AGREE / FINISHED_WITH_RETURN. `protocol_info`
-returns version3, APPROVED, the exact profile hash and calibration manifest hash.
+returns version 3, APPROVED, the exact profile hash and calibration manifest hash.
 The site verifies the public profile bytes against the on-chain hash before
 allowing v3 writes. The collector pins providers, versions, prices, temperature,
 token limit and termination policy. Inconsistent routing fails closed.
@@ -45,15 +46,22 @@ OpenRouter key was injected in the authorized outbound server request only;
 no key entered page state, browser storage, backups or logs. API responses were
 real forwarded production responses, not fabricated fixtures.
 
+The updated production registration form also produced verified unsigned calldata
+for a GPT collection target with a separate Llama declaration. A read-only local
+reviewer rejected before signing or broadcast. The wallet path used ordinary
+EIP-1193 chain/send methods, with no Snap calls. The registry fits a 390 px viewport;
+tables scroll inside their container. No HTTP 500 records were returned by the
+production log check for the verification hour.
+
 The durable production collector uses Sensitive environment configuration,
 private Blob storage, OIDC, conditional versions and an exclusive signer journal.
 Signed transactions are persisted before broadcast; retries recover existing
 transactions instead of collecting again or blindly consuming a new nonce.
-The signer retains an absolute nonce ceiling of21 and fee limit0.01 test GEN.
+The signer retains an absolute nonce ceiling of 21 and fee limit 0.01 test GEN.
 The primary wallet key remains local. Custom domain `voirdire.pro` is managed by
 the owner. See [operations](lib/COLLECTOR_OPERATIONS.md).
 
-## Live economic controls — native finalization pending
+## Verified live economic controls and native withdrawal
 
 Three separately collected controls passed their expected paths:
 
@@ -62,12 +70,16 @@ Three separately collected controls passed their expected paths:
 - Truthful GPT outside the radius: INCONCLUSIVE, stake1e12wei returned, zero
   confirmed rounds. Its bond remains subject to the original validity window.
 - Separate truthful GPT within the radius: CONSISTENT, stake1e12wei returned,
-  one confirmed round; vendor closure returned the3e12wei bond.
+  one confirmed round; vendor closure returned the 3e12 wei bond.
 
-The browser submitted the combined9e12wei withdrawal. Its Intelligent Contract
-transaction was ACCEPTED / AGREE / FINISHED_WITH_RETURN; actual native arrival
-must still be verified after Bradbury's finalization window. Public transaction
-IDs and the exact credit breakdown are in
+The browser submitted the combined 9e12 wei withdrawal:
+`0x16aa9a0183b51fb79d40a4b36f34865b48c806b37eba08951abaa4d971e7b3ca`.
+It reached FINALIZED / AGREE / FINISHED_WITH_RETURN. The recipient wallet increased
+by exactly 9e12 wei from the recorded balance after submission fees; no further
+recipient transactions occurred during the measurement window. No manual
+finalization transaction or fee adjustment was needed.
+
+Public transaction IDs, control results and the exact credit breakdown are in
 [release-verification.json](public/release-verification.json). Every operational
 abstention remains recorded separately from the fixed scientific confirmation.
 
@@ -79,7 +91,7 @@ for the new v3 economic controls.
 
 ## Implementation checks and failed trials
 
-143 archived v2 checks, 30 v3 checks and45 analysis checks pass. All89 JavaScript
+143 archived v2 checks, 30 v3 checks and 45 analysis checks pass. All 89 JavaScript
 checks pass, and the production Vercel build succeeds. The fixture gate still
 must return UNDECIDABLE/exit2. Live consensus and actual fund arrival are checked
 separately from these offline results.
