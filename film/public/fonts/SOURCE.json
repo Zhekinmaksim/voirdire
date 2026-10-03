@@ -1,0 +1,21 @@
+{
+  "repository": "https://github.com/vercel/geist-font",
+  "commit": "10dc7658f13c38a474cde201bb09a4617267545b",
+  "files": {
+    "Geist-Regular.woff2": {
+      "source": "https://raw.githubusercontent.com/vercel/geist-font/10dc7658f13c38a474cde201bb09a4617267545b/fonts/Geist/webfonts/Geist-Regular.woff2",
+      "sha256": "12e7c80de776bc74044973a26bb96842ca4bfe9e16fc6128fa5c6420e8e1d8fc",
+      "bytes": 45228
+    },
+    "GeistMono-Regular.woff2": {
+      "source": "https://raw.githubusercontent.com/vercel/geist-font/10dc7658f13c38a474cde201bb09a4617267545b/fonts/GeistMono/webfonts/GeistMono-Regular.woff2",
+      "sha256": "67b27e8a75395c074cc23656acf208ccd69e674da4cad2c7d6dfa254272ad7e8",
+      "bytes": 50764
+    },
+    "OFL.txt": {
+      "source": "https://raw.githubusercontent.com/vercel/geist-font/10dc7658f13c38a474cde201bb09a4617267545b/OFL.txt",
+      "sha256": "c683bfbcc7e087f5d37a54ef628f10387c451a83ddc459b151403a164ac46c90",
+      "bytes": 4383
+    }
+  }
+}

@@ -5,7 +5,7 @@
  *
  * The one rule carries over unchanged and governs the whole video: colour marks
  * only what the instrument could not resolve. Everything the battery separates
- * is steel. The spectrum appears in exactly one scene.
+ * is steel. The spectrum marks abstentions and inconclusive testimony.
  */
 
 export const C = {
@@ -21,9 +21,9 @@ export const C = {
 } as const;
 
 export const SANS =
-  "'Geist','Inter','Satoshi','General Sans',system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif";
+  "'Voirdire Geist',sans-serif";
 export const MONO =
-  "'Geist Mono','IBM Plex Mono','JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace";
+  "'Voirdire Geist Mono',monospace";
 
 /** One spectrum, defined once, reused wherever interference is shown. */
 export const FILM =

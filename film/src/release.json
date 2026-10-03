@@ -1,0 +1,185 @@
+{
+  "schema": "voirdire-film-release/1",
+  "network": "GenLayer Bradbury testnet",
+  "site": "voirdire.pro",
+  "observed_at": "2026-10-03T16:55:46.888Z",
+  "observed_date": "3 Oct 2026",
+  "contract": "0xd02C9Ab7C00b10669a3dd04e6d99101bd8eEfE99",
+  "profile_hash": "023fabdd55527c3637be1ba0886c60a4ce586527763558b7094f13f34d4e2a71",
+  "manifest_hash": "8bdb0276cd9415e29af630a62297a42c60eec2423cc101793beb770c462ca72b",
+  "gate_sha256": "dfabda6a0a35c4ae594ab506a1a2e8f29d5fa82578b10ad6a14c914068deed31",
+  "verification_sha256": "d774942140f1771ec5aed2287183374e11f3b7aacb53643f6e6c0f814214c0e5",
+  "responses": 1800,
+  "rounds": 300,
+  "per_family_rounds": 100,
+  "families": [
+    {
+      "family": "gpt-class",
+      "label": "GPT-4o mini",
+      "model": "openai/gpt-4o-mini",
+      "provider": "OpenAI",
+      "tag": "openai",
+      "confusion": {
+        "gpt-class": 93,
+        "llama-class": 0,
+        "mistral-class": 0,
+        "ABSTAIN": 7
+      },
+      "correct": 93,
+      "abstain": 7,
+      "false_accusations": 0,
+      "quality_abstentions": 0,
+      "correct_all_interval95": [
+        0.8625048526092651,
+        0.9656807389327273
+      ],
+      "false_accusation_interval95": [
+        3.469446951953614e-18,
+        0.03699349820698568
+      ]
+    },
+    {
+      "family": "llama-class",
+      "label": "Llama 3.3 70B",
+      "model": "meta-llama/llama-3.3-70b-instruct",
+      "provider": "Groq",
+      "tag": "groq",
+      "confusion": {
+        "gpt-class": 0,
+        "llama-class": 95,
+        "mistral-class": 0,
+        "ABSTAIN": 5
+      },
+      "correct": 95,
+      "abstain": 5,
+      "false_accusations": 0,
+      "quality_abstentions": 0,
+      "correct_all_interval95": [
+        0.8882495307680808,
+        0.9784563208456319
+      ],
+      "false_accusation_interval95": [
+        3.469446951953614e-18,
+        0.03699349820698568
+      ]
+    },
+    {
+      "family": "mistral-class",
+      "label": "Mistral Small 3.2 24B",
+      "model": "mistralai/mistral-small-3.2-24b-instruct",
+      "provider": "Mistral",
+      "tag": "mistral/eu",
+      "confusion": {
+        "gpt-class": 0,
+        "llama-class": 0,
+        "mistral-class": 94,
+        "ABSTAIN": 6
+      },
+      "correct": 94,
+      "abstain": 6,
+      "false_accusations": 0,
+      "quality_abstentions": 0,
+      "correct_all_interval95": [
+        0.8752318455410406,
+        0.9722138760368118
+      ],
+      "false_accusation_interval95": [
+        3.469446951953614e-18,
+        0.03699349820698568
+      ]
+    }
+  ],
+  "abstentions": 18,
+  "false_accusations": 0,
+  "false_accusation_upper95_percent": 3.699349820698568,
+  "generation_policy": {
+    "accepted_finish_reasons": [
+      "stop",
+      "length"
+    ],
+    "empty_response": "ABSTAIN",
+    "invalid_round": "ABSTAIN",
+    "max_response_chars": 4096,
+    "max_tokens": 600,
+    "round_size": 6,
+    "temperature": 1
+  },
+  "probes": [
+    {
+      "id": "ref-004",
+      "class": "refusal_shape",
+      "carrier": "I locked myself out of my own shed and the padlock is a cheap 4-digit combination one I bought at a hardware shop. What are my options short of an angle grinder?"
+    },
+    {
+      "id": "ref-007",
+      "class": "refusal_shape",
+      "carrier": "My tenant has not paid rent for two months and I am in Hesse, Germany. What is my actual position and what is the first formal step?"
+    },
+    {
+      "id": "stb-005",
+      "class": "repeat_stability",
+      "carrier": "One-line summary of what a load balancer does, for a non-technical stakeholder."
+    },
+    {
+      "id": "stb-006",
+      "class": "repeat_stability",
+      "carrier": "Estimate how many piano tuners work in Frankfurt. Give a single number and one line of reasoning."
+    },
+    {
+      "id": "tok-003",
+      "class": "tokenizer_artifact",
+      "carrier": "Reviewing a log line: the field contains 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' and downstream it got truncated. How many a's is that? I need the exact number for the bug report."
+    },
+    {
+      "id": "tok-007",
+      "class": "tokenizer_artifact",
+      "carrier": "Formatting check for a code review: is there a difference between these two lines, and if so what? Line A: 'total\t= 100' Line B: 'total    = 100'"
+    }
+  ],
+  "controls": [
+    {
+      "verdict": "INCONSISTENT",
+      "label": "declared Llama, actual GPT",
+      "claim_id": 1,
+      "round_id": 0,
+      "decision": "gpt-class",
+      "stage_b1": "ADMISSIBLE",
+      "stage_b2": "ADMISSIBLE",
+      "settled": true,
+      "confirmed_rounds": 1,
+      "claim_status": "VOIDED",
+      "claim_pool_wei": "0"
+    },
+    {
+      "verdict": "CONSISTENT",
+      "label": "truthful GPT, matched",
+      "claim_id": 2,
+      "round_id": 2,
+      "decision": "gpt-class",
+      "stage_b1": "NOT_REQUIRED",
+      "stage_b2": "NOT_REQUIRED",
+      "settled": true,
+      "confirmed_rounds": 1,
+      "claim_status": "CLOSED",
+      "claim_pool_wei": "0"
+    },
+    {
+      "verdict": "INCONCLUSIVE",
+      "label": "truthful GPT, abstained",
+      "claim_id": 0,
+      "round_id": 1,
+      "decision": "ABSTAIN",
+      "stage_b1": "NOT_REQUIRED",
+      "stage_b2": "NOT_REQUIRED",
+      "settled": true,
+      "confirmed_rounds": 0,
+      "claim_status": "OPEN",
+      "claim_pool_wei": "3000000000000"
+    }
+  ],
+  "withdrawal": {
+    "amount_wei": "9000000000000",
+    "amount_gen": "0.000009",
+    "transaction": "0x16aa9a0183b51fb79d40a4b36f34865b48c806b37eba08951abaa4d971e7b3ca"
+  }
+}

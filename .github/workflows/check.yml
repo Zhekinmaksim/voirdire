@@ -25,6 +25,11 @@ jobs:
       - run: python3 scripts/package_contract.py
       - run: git diff --exit-code -- public/voirdire.py public/voirdire.deploy.py public/voirdire.deploy.map.json
       - run: npm run build
+      - name: Verify film release facts and TypeScript
+        run: |
+          npm --prefix film ci
+          npm --prefix film run typecheck
+          git diff --exit-code -- film/src/release.json
       # Regenerate fixtures after building, so a committed live matrix is not overwritten before its gate.
       - run: make -C chain-and-site fixture matrix page
       - name: Fixture must be undecidable

@@ -71,7 +71,7 @@ export const Stage: React.FC<{
     extrapolateRight: 'clamp',
   });
   return (
-    <AbsoluteFill style={{backgroundColor: C.obsidian, fontFamily: SANS}}>
+    <AbsoluteFill style={{backgroundColor: C.obsidian, fontFamily: SANS, fontWeight:400, fontSynthesis:'none'}}>
       <Atmosphere intensity={atmosphere} />
       <AbsoluteFill style={{transform: `scale(${scale})`}}>{children}</AbsoluteFill>
       <Grain />
@@ -149,7 +149,7 @@ export const Panel: React.FC<{
   </div>
 );
 
-/** The spectral surface. Drifts slowly; never used except on an unresolved pair. */
+/** The spectral surface. Drifts slowly; used only for unresolved outcomes. */
 export const Film: React.FC<{style?: React.CSSProperties; speed?: number}> = ({
   style,
   speed = 1,
@@ -197,7 +197,7 @@ export const Caption: React.FC<{children: React.ReactNode; style?: React.CSSProp
       fontFamily: MONO,
       fontSize: 20,
       letterSpacing: '-0.022em',
-      color: C.iron,
+      color: C.smoke,
       ...style,
     }}
   >

@@ -144,9 +144,17 @@ claims are immutable; changing the site address does not move old deposits.
 
 ## Film
 
-`film/` contains the Remotion project; `voirdire-60s.mp4` is the original film.
-Its figures are synthetic historical illustrations, not current product evidence.
-It is excluded from deployment. Render with `cd film && npm ci && npm run render`.
+`film/` contains the updated Remotion project; `voirdire-60s.mp4` is the current
+60-second v3 cut. It presents the real confirmation counts, trusted collector,
+three finalized controls and verified withdrawal of testnet GEN. The original
+design and music edit remain; Geist fonts are now bundled. The earlier synthetic
+cut is archived in Git history.
+
+The complete new MP4 was rendered and decoded successfully. See
+[film/AUDIT.md](film/AUDIT.md) and [film/RELEASE.json](film/RELEASE.json) for the
+checks and artifact hashes. The video is a repository/local release artifact,
+excluded from Vercel deployment. Render with `cd film && npm ci && npm run render`;
+the film's displayed facts are validated against the product release first.
 The full composition was re-rendered and decoded successfully during the current
 review; see [film/AUDIT.md](film/AUDIT.md) for outdated captions and font fallback
 limitations that must be addressed before a current launch cut.

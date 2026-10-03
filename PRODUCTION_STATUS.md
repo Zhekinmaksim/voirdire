@@ -114,14 +114,19 @@ profile, exercised the registration/examination/history screens, corpus filters
 and keyboard disclosure, and found no page errors or horizontal overflow at
 390 px. Reduced motion suppresses the wordmark animation.
 
-The original Remotion composition passes typechecking, full 1,800-frame rendering
-and complete MP4 decoding. Its historical captions and synthetic matrix remain
-unsuitable for a current launch cut; see [film/AUDIT.md](film/AUDIT.md).
+The updated Remotion cut passes typechecking, full 1,800-frame rendering and
+complete MP4 decoding. It replaces synthetic figures and historical captions
+with validated v3 confirmation, fixed-collector limits, finalized testnet controls
+and the native withdrawal. The original music and design are retained, with
+bundled fonts. Film evidence is derived from the checked release records;
+[film/RELEASE.json](film/RELEASE.json) binds the ready MP4 to its sources and assets.
+See [film/AUDIT.md](film/AUDIT.md) for the new checks and original archived audit.
 
 Historical v2 judge disagreements and earlier withdrawal failures remain in
 local journals. New deployment does not modify old contracts or move deposits.
-The old v2 deployment config is preserved for recovery. The original film has
-synthetic historical scores and is excluded from the product deployment.
+The old v2 deployment config is preserved for recovery. The original synthetic
+film remains in Git history. The updated film is a repository release artifact
+and is excluded from the website deployment.
 
 Current model-call debit is $2.85945606,
 including discarded attempts and both hosted trials. A separate $0.02 storage

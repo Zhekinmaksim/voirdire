@@ -2,6 +2,7 @@ import React from 'react';
 import {Composition} from 'remotion';
 import {Voirdire} from './Video';
 import {DURATION, FPS} from './timing';
+import './fonts';
 
 export const RemotionRoot: React.FC = () => (
   <Composition

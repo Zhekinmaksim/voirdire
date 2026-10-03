@@ -1,4 +1,37 @@
-# Film audit, 2026-10-03
+# Current film verification, 2026-10-03
+
+The updated v3 cut replaces `../voirdire-60s.mp4`. It uses real confirmation
+counts, explicit trusted-collector limits and finalized Bradbury testnet controls.
+The original visual system, musical edit and twelve-scene timing are retained.
+
+- TypeScript and verified release-data generation pass.
+- The full composition renders: H.264, 1920×1080, 30 fps, 1,800 frames / 60 seconds.
+- AAC audio is stereo at 48 kHz. Container duration: 60.053 seconds including
+  audio padding. The complete MP4 decodes without errors.
+- Mean decoded audio level: -16.8 dBFS. Peak: -0.5 dBFS; no sample clipping.
+- Twelve settled scene samples were inspected, plus full-resolution previews
+  of the matrix and live-control panels. No visible clipping was found.
+  This is a sampled visual review, not an assertion that every frame was inspected.
+- Geist Sans and Geist Mono Regular are bundled and awaited before rendering.
+  Their official source commit, license and hashes are included in `public/fonts/`.
+- Remotion packages are pinned to 4.0.523. The transitive `fast-uri` dependency
+  was updated within version 3 to 3.1.8; npm reports zero known vulnerabilities.
+- No new model calls or on-chain transactions were made for the film update.
+
+`src/release.json` binds displayed facts to the public profile, confirmation and
+settlement records. `RELEASE.json` records the final MP4, source and asset hashes.
+A render fails if the source records no longer support the story.
+
+The film remains a testnet evidence presentation, not proof of model identity,
+certification of unknown models, or a real-money product claim.
+
+---
+
+The following audit is historical. It describes the original synthetic cut at
+Git revision `d06a73615c5d0c05b597987c8223dee73e7b6e6f`, before this update.
+References below to the original MP4 or font fallback refer to that revision.
+
+# Archived original-cut audit, 2026-10-03
 
 The original film is a working historical artifact. It is **not current v3
 release evidence** and is excluded from the product deployment.
